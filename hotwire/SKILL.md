@@ -9,7 +9,6 @@ description: >-
   Blurhash, Picture-in-Picture), loading states, progress bars, optimistic UI, view transitions,
   and Stimulus controller fundamentals (lifecycle, values, targets, outlets, actions, keyboard
   events). Use when building or debugging any Hotwire feature.
-disable-model-invocation: true
 ---
 
 # Hotwire

@@ -1,7 +1,6 @@
 ---
 name: for-real
 description: "Force a skeptical second pass on your own work. Because 'it should work' has never once been true."
-disable-model-invocation: true
 ---
 
 Stop. Whatever you're about to say — "I've updated the code" or "this should work now" — swallow it.

@@ -1,7 +1,6 @@
 ---
 name: pr-writer
 description: ALWAYS use this skill when creating or updating pull requests — never create or edit a PR directly without it. Trigger on any create PR, open PR, submit PR, make PR, update PR title, update PR description, edit PR, push and create PR, prepare changes for review task, or request for a PR writer.
-disable-model-invocation: true
 ---
 
 # PR Writer
