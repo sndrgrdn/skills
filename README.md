@@ -4,18 +4,24 @@ A collection of agent skills that extend capabilities across planning, developme
 
 ## Planning & Design
 
-These skills help you think through problems before writing code.
+Think through problems before writing code.
 
-- **write-a-prd** — Create a PRD through user interview, codebase exploration, and module design.
-
-  ```
-  npx skills@latest add sndrgrdn/skills/write-a-prd
-  ```
-
-- **create-plan** — Research (via subagent), draft, and iteratively review a plan before implementation. For cross-cutting changes that need alignment before code.
+- **grill-me** — Get relentlessly interviewed about a plan or design until every branch of the decision tree is resolved.
 
   ```
-  npx skills@latest add sndrgrdn/skills/create-plan
+  npx skills@latest add sndrgrdn/skills/grill-me
+  ```
+
+- **grill-with-docs** — Same grilling, but also challenges your plan against the existing domain model (CONTEXT.md, ADRs) and updates documentation inline as decisions crystallize.
+
+  ```
+  npx skills@latest add sndrgrdn/skills/grill-with-docs
+  ```
+
+- **to-prd** — Synthesize the current conversation and codebase understanding into a PRD. No interview — just writes it from what it already knows.
+
+  ```
+  npx skills@latest add sndrgrdn/skills/to-prd
   ```
 
 - **to-todos** — Break a plan, spec, or PRD into independently-grabbable file-backed todos using tracer-bullet vertical slices.
@@ -24,21 +30,15 @@ These skills help you think through problems before writing code.
   npx skills@latest add sndrgrdn/skills/to-todos
   ```
 
-- **grill-me** — Get relentlessly interviewed about a plan or design until every branch of the decision tree is resolved.
+- **improve-codebase-architecture** — Surface architectural friction and propose deepening opportunities: refactors that turn shallow modules into deep ones. Informed by CONTEXT.md and ADRs.
 
   ```
-  npx skills@latest add sndrgrdn/skills/grill-me
+  npx skills@latest add sndrgrdn/skills/improve-codebase-architecture
   ```
 
 ## Development
 
-These skills help you write, refactor, and fix code.
-
-- **tdd** — Test-driven development with a red-green-refactor loop. Integration-first, one vertical slice at a time.
-
-  ```
-  npx skills@latest add sndrgrdn/skills/tdd
-  ```
+Write, refactor, and fix code.
 
 - **hotwire** — Build Hotwire applications with Turbo Drive, Turbo Frames, Turbo Streams, and Stimulus. Covers forms, inline editing, typeahead, modals, and real-time streams.
 
@@ -54,18 +54,12 @@ These skills help you write, refactor, and fix code.
 
 ## Review & Shipping
 
-These skills help you sharpen work before it leaves your machine.
+Sharpen work before it leaves your machine.
 
 - **deslop** — Review recently written code for over-engineering, paranoia, and LLM slop. Checks each candidate against local codebase idiom before trimming.
 
   ```
   npx skills@latest add sndrgrdn/skills/deslop
-  ```
-
-- **for-real** — Force a skeptical second pass on your own work. Because "it should work" has never once been true.
-
-  ```
-  npx skills@latest add sndrgrdn/skills/for-real
   ```
 
 - **pr-writer** — Create or update pull requests with a consistent structure. Always use before running `gh pr create`.
@@ -74,9 +68,21 @@ These skills help you sharpen work before it leaves your machine.
   npx skills@latest add sndrgrdn/skills/pr-writer
   ```
 
+- **iterate-pr** — Keep pushing on a PR until CI passes and review feedback is addressed. Fetches check status, extracts failure snippets, fixes, and re-pushes.
+
+  ```
+  npx skills@latest add sndrgrdn/skills/iterate-pr
+  ```
+
+- **commit** — Commit staged or related changes with a clear message. Optionally push.
+
+  ```
+  npx skills@latest add sndrgrdn/skills/commit
+  ```
+
 ## Writing & Editing
 
-- **humanizer** — Remove signs of AI-generated writing from text. Detects and rewrites 29 AI writing patterns to make prose sound natural and human.
+- **humanizer** — Remove signs of AI-generated writing from text. Detects and rewrites 31 AI writing patterns to make prose sound natural and human.
 
   ```
   npx skills@latest add sndrgrdn/skills/humanizer
@@ -86,4 +92,10 @@ These skills help you sharpen work before it leaves your machine.
 
   ```
   npx skills@latest add sndrgrdn/skills/skill-writer
+  ```
+
+- **prompt-optimizer** — Create, optimize, and refine agent prompts and system prompts. Supports model-family porting (OpenAI, Claude, Gemini) and eval-driven iteration.
+
+  ```
+  npx skills@latest add sndrgrdn/skills/prompt-optimizer
   ```
