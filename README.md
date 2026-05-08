@@ -18,10 +18,10 @@ These skills help you think through problems before writing code.
   npx skills@latest add sndrgrdn/skills/create-plan
   ```
 
-- **prd-to-todos** — Break a PRD into independently-grabbable file-backed todos using tracer-bullet vertical slices.
+- **to-todos** — Break a plan, spec, or PRD into independently-grabbable file-backed todos using tracer-bullet vertical slices.
 
   ```
-  npx skills@latest add sndrgrdn/skills/prd-to-todos
+  npx skills@latest add sndrgrdn/skills/to-todos
   ```
 
 - **grill-me** — Get relentlessly interviewed about a plan or design until every branch of the decision tree is resolved.
@@ -74,7 +74,13 @@ These skills help you sharpen work before it leaves your machine.
   npx skills@latest add sndrgrdn/skills/pr-writer
   ```
 
-## Writing Skills
+## Writing & Editing
+
+- **humanizer** — Remove signs of AI-generated writing from text. Detects and rewrites 29 AI writing patterns to make prose sound natural and human.
+
+  ```
+  npx skills@latest add sndrgrdn/skills/humanizer
+  ```
 
 - **skill-writer** — Create, synthesize, and iteratively improve agent skills following the Agent Skills specification. Handles source capture, depth gates, authoring, registration, and validation.
 
