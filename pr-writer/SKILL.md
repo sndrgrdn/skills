@@ -63,6 +63,8 @@ Only proceed once the user confirms the diff is intentional.
 
 If intent (the WHY) is not clear from the conversation, ask the user before writing.
 
+**Voice:** After drafting the description, run it through the `humanizer` skill (if available) to remove AI writing patterns. The "Why" section especially must read like a human wrote it — no significance inflation, no promotional language, no filler phrases.
+
 **Description template:**
 
 ```markdown
