@@ -12,16 +12,18 @@
 - [Over-parameterized signature](#over-parameterized-signature)
 - [Comment and doc slop](#comment-and-doc-slop)
 - [Log and debug noise](#log-and-debug-noise)
+- [Unused imports / requires](#unused-imports--requires)
+- [Semantic duplication](#semantic-duplication)
 - [Test slop](#test-slop)
 - [Placeholder and stub](#placeholder-and-stub)
 - [Dead code after return / throw](#dead-code-after-return--throw)
 - [Type escape hatch](#type-escape-hatch)
 
-Remember: every flag runs through **neighbor check** before grug propose drop. local idiom = keep. novel = flag.
+Every flag runs through **neighbor check** before proposing drop. local idiom = keep. novel = flag.
 
 ## Defensive chaff
 
-grug add defense code don't need.
+Defensive code that serves no purpose.
 
 - `x || false` — `x` already boolean
 - `x || []` — `x` already array
@@ -33,7 +35,7 @@ grug add defense code don't need.
 
 ## Dead insurance
 
-grug add protection nobody use.
+Protection against conditions that cannot occur.
 
 - `.freeze` / `Object.freeze` on class-level state never mutated at runtime
 - `.flatten` on splat (`*args` / `...rest` already flat)
@@ -44,7 +46,7 @@ grug add protection nobody use.
 
 ## Paranoid rescue / catch
 
-grug catch error that can't happen.
+Error handling for code paths that cannot raise.
 
 - `rescue => e; raise e` / `catch(e) { throw e }` — identity no-op
 - `rescue => e; logger.error(e); raise` — framework already log re-raise
@@ -54,7 +56,7 @@ grug catch error that can't happen.
 
 ## Identity and redundant op
 
-grug write code do nothing.
+Operations that produce no effect.
 
 - `.map { |x| x }` / `.map(x => x)` — identity
 - `.reject(&:nil?)` followed `.compact` — redundant
@@ -66,7 +68,7 @@ grug write code do nothing.
 
 ## Pedantic normalization
 
-grug change type don't need change.
+Type conversions where the value is already the target type.
 
 - `.to_sym` on literal string (already interned)
 - `.deep_dup` when `.dup` enough
@@ -76,20 +78,20 @@ grug change type don't need change.
 
 ## Premature factoring
 
-grug make structure too early. grugbrain.dev §Factoring:
-
-> early on in project everything very abstract and like water ... good cut points emerge from code base
+Structure introduced before the code has settled. Good cut points emerge from the codebase — don't force them early.
 
 - private method, one caller, 1-2 line body
 - constant for value used once
 - wrapper that only renames (`def fetch_user; find_user; end`)
+- stacked wrappers — `a()` calls `b()` calls `c()`, each single-use 1-liner. collapse chain to inline expression at call site
 - namespace module with one class inside
 - base class with one implementor
 - generic parameter with one type
+- thin library wrapper — wrapping a 3rd-party lib with a pass-through layer "in case we swap it later." wait until you actually swap it
 
 ## YAGNI abstraction
 
-grug future-proof for future not come.
+Extensibility for requirements that don't exist.
 
 - config option / kwarg with one value ever passed
 - default never overridden
@@ -106,7 +108,7 @@ grug future-proof for future not come.
 
 ## Comment and doc slop
 
-grug or AI write word nobody read.
+Comments and docs that add noise, not signal.
 
 - comment restate code (`# increment counter` above `counter += 1`)
 - YARD / JSDoc `@param`/`@return` on 1-line method where signature obvious
@@ -119,12 +121,29 @@ grug or AI write word nobody read.
 
 ## Log and debug noise
 
-- `Rails.logger.debug "Entered method X"` — obvious trace. grugbrain.dev §Logging: log useful branch, not obvious enter
+- `Rails.logger.debug "Entered method X"` — obvious trace. log useful branches, not obvious entry points
 - `puts` / `p` / `pp` / `binding.pry` leftover from debug session
 - `console.log` wasn't there before
 - `print(...)` / `pprint(...)` leftover
 - structured log on non-diagnostic path
 - telemetry / metric emission with no consumer
+
+## Unused imports / requires
+
+Imports for modules no symbol references.
+
+- `import` / `require` for module no symbol references
+- AI generates imports associated with a task even when implementation doesn't use them
+- leftover after refactor removed the last usage
+
+## Semantic duplication
+
+Same utility reimplemented in a different file.
+
+- two or more functions with same intent, different names, slightly different behavior (`formatDate` in 3 files with 3 input types)
+- AI generates each in a fresh prompt session without knowing the other exists
+- grep for common suspects: date formatting, error wrapping, API response shaping, string normalization
+- not same as copy-paste duplication — the implementations differ, the intent is identical
 
 ## Test slop
 
@@ -135,10 +154,11 @@ if diff include spec / test file.
 - setup create record that assertion never touch
 - `expect(true).to be_truthy` / `assert True`
 - multiple test asserting same branch
+- weak / existence-only assertion — `toBeDefined()`, `toBeTruthy()`, `not_to be_nil` without checking actual value. test specific outcomes
 
 ## Placeholder and stub
 
-grug or AI leave half-done work.
+Incomplete implementations with no plan to finish.
 
 - `def foo; raise NotImplementedError; end` with no caller plan
 - `// TODO: add logic here` inside empty body
@@ -153,10 +173,10 @@ grug or AI leave half-done work.
 
 ## Type escape hatch
 
-grug or AI silence type system warn, no fix.
+Silencing type system warnings without fixing the cause.
 
 - TypeScript: `as any`, `@ts-ignore`, `@ts-expect-error` with no reason comment
 - Ruby: `.send(:private_method)` for access shortcut, `.instance_variable_get`
 - Python: `# type: ignore` with no reason, `cast(Any, x)`
 
-grugbrain.dev §Type Systems: type system warn for reason. silence without fix = slop. silence WITH reason comment = maybe ok.
+Type system warns for a reason. Silence without fix = slop. Silence with a reason comment = possibly acceptable.

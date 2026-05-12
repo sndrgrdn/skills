@@ -74,6 +74,8 @@ Check:
 
 This is Chesterton's fence: do not remove a safeguard or convention until its purpose is understood.
 
+**Caveat:** if surrounding code was also AI-generated recently, the neighbor check can validate accumulated slop as "local idiom." The check still applies — deslop scopes to the current diff, not codebase-wide cleanup — but note the limitation when reporting findings.
+
 ### Step 3: Load Catalogs and Scan
 
 Always read `references/catalog.md`.

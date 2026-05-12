@@ -1,9 +1,9 @@
 ---
-name: iterate-pr
-description: Iterate on a PR until CI passes and review feedback is addressed. Use when asked to "fix CI", "fix failing checks", "iterate on PR", "address review feedback", "make CI green", "fix the build", or "keep pushing until it passes".
+name: babysit-pr
+description: Babysit a PR until CI passes and review feedback is addressed. Use when asked to "fix CI", "fix failing checks", "babysit PR", "iterate on PR", "address review feedback", "make CI green", "fix the build", or "keep pushing until it passes".
 ---
 
-# Iterate on PR Until CI Passes
+# Babysit PR Until CI Passes
 
 Continuously iterate on the current branch until all CI checks pass and review feedback is addressed.
 
@@ -114,7 +114,29 @@ Run `fetch_pr_checks.rb` to get structured failure data.
 
 **Wait if pending:** If review bot checks (Copilot, Devin, CodeQL) are still running, wait — they post actionable feedback. Info bots (codecov) are not worth waiting for.
 
-### 5. Fix CI Failures
+### 5. Triage CI Failures — Flaky vs Real
+
+Before fixing, determine whether each failure is **real** (caused by PR changes) or **flaky** (pre-existing / intermittent).
+
+**Flaky test indicators** (any of these suggest flakiness):
+- Failure is in code not touched by the PR (`git diff main...HEAD` doesn't include the failing file or its direct dependencies)
+- Timing/race condition patterns: element not visible, timeout, connection refused, "expected X to be on page"
+- The same test passed in a previous CI run on the same branch
+- Infrastructure errors: container startup, network, OOM, service unavailable
+
+**When flaky tests are detected:**
+
+1. Confirm flakiness — check PR diff to rule out indirect causes
+2. Re-run only the failed jobs:
+   ```bash
+   gh run rerun <run_id> --failed
+   ```
+3. Monitor the re-run with `monitor_pr_checks.rb`
+4. If the same test fails again after re-run, investigate whether the PR could be an indirect cause (e.g., adding a gem that changes global behavior, changing shared infrastructure)
+5. **Max 1 automatic re-run per workflow run.** After that, report the persistent failure and ask for guidance
+6. If confirmed unrelated after investigation, note it and move on — do not block the PR on pre-existing flaky tests
+
+### 6. Fix Real CI Failures
 
 **Investigation is mandatory before any fix.** Do not guess from the check name or surface error.
 
@@ -128,7 +150,7 @@ For each failure:
 6. **Fix root cause with minimal changes.** No papering over symptoms.
 7. **Extend tests when needed.** If the fix introduces uncovered behavior, add a test case.
 
-### 6. Verify Locally, Then Commit and Push
+### 7. Verify Locally, Then Commit and Push
 
 Before committing, verify fixes locally:
 
@@ -150,13 +172,13 @@ git push
 
 Commit style: lowercase, descriptive, no conventional commit prefix. Match existing repo convention.
 
-### 7. Monitor CI and Address Feedback
+### 8. Monitor CI and Address Feedback
 
 Loop instead of blocking:
 
 1. Run `fetch_pr_checks.rb` for current CI status
 2. All checks passed → proceed to exit conditions
-3. Any checks failed (none pending) → return to step 5
+3. Any checks failed (none pending) → return to step 5 (triage flaky vs real)
 4. Checks still pending:
    a. Run `fetch_pr_feedback.rb` for new review feedback
    b. Address any new high/medium feedback immediately
@@ -164,15 +186,15 @@ Loop instead of blocking:
    d. Sleep 30 seconds, repeat from sub-step 1
 5. After all checks pass, wait 10 seconds, then run `fetch_pr_feedback.rb`. Address any new high/medium feedback — if changes needed, return to step 6.
 
-### 8. Repeat
+### 9. Repeat
 
-If step 7 required code changes (new feedback after CI passed), return to step 2 for a fresh cycle.
+If step 8 required code changes (new feedback after CI passed), return to step 2 for a fresh cycle.
 
 ## Exit Conditions
 
-**Success:** All checks pass, post-CI feedback re-check is clean, user has decided on low-priority items.
+**Success:** All checks pass (or only confirmed-flaky tests remain), post-CI feedback re-check is clean, user has decided on low-priority items.
 
-**Ask for help:** Same failure after 2 attempts, feedback needs clarification, infrastructure issues.
+**Ask for help:** Same real failure after 2 attempts, feedback needs clarification, infrastructure issues, flaky test persists after re-run and indirect cause is suspected.
 
 **Stop:** No PR exists, branch needs rebase.
 

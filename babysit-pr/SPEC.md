@@ -1,4 +1,4 @@
-# iterate-pr Specification
+# babysit-pr Specification
 
 ## Intent
 
@@ -22,14 +22,14 @@ Out of scope:
 ## Users and Trigger Context
 
 - Primary users: developers iterating on open PRs
-- Common requests: "fix CI", "make checks green", "address review feedback", "iterate on this PR"
+- Common requests: "fix CI", "make checks green", "address review feedback", "babysit this PR", "iterate on this PR"
 - Should not trigger for: creating PRs, reviewing others' code, general testing
 
 ## Runtime Contract
 
 - Required first actions: identify PR via `gh pr view`
 - Required outputs: fix commits pushed, CI status reported
-- Non-negotiable constraints: investigate before fixing, verify locally before pushing, max 2 retries per same failure
+- Non-negotiable constraints: investigate before fixing, verify locally before pushing, max 2 retries per same real failure, max 1 automatic re-run for suspected flaky tests
 - Expected bundled files: 3 Ruby scripts in `scripts/`
 
 ## Source and Evidence Model
@@ -57,6 +57,7 @@ Data that must not be stored:
 - Feedback categorization is heuristic — no explicit priority markers from reviewers
 - Log snippet extraction may miss unusual failure formats
 - Sharded test failures (rspec × 4, cucumber × 32) may produce large log output
+- Flaky test detection is heuristic — checks PR diff and failure patterns but cannot guarantee a test is truly unrelated
 
 ## Maintenance Notes
 
