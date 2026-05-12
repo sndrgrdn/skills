@@ -1,19 +1,23 @@
 ---
 name: hotwire
 description: >-
-  Build Hotwire applications with Turbo Drive, Turbo Frames, Turbo Streams, and Stimulus.
-  Covers form submission and validation, inline editing, typeahead/autocomplete, modal forms,
-  navigation and pagination, tabbed content, lazy loading, faceted search, cache lifecycle,
-  scroll restoration, real-time WebSocket/SSE updates, custom Turbo Stream actions, cross-tab
-  sync, media uploads/previews/playback, third-party media integrations (WaveSurfer, Swiper,
-  Blurhash, Picture-in-Picture), loading states, progress bars, optimistic UI, view transitions,
-  and Stimulus controller fundamentals (lifecycle, values, targets, outlets, actions, keyboard
-  events). Use when building or debugging any Hotwire feature.
+  Build and debug Hotwire features with Turbo Drive, Turbo Frames, Turbo Streams, and
+  Stimulus controllers. Includes implementation recipes for forms, navigation, real-time
+  streaming, media, UX feedback, and Stimulus patterns, plus Rails best-practice rules for
+  broadcasting, morphing, progressive enhancement, and testing. Use for any task involving
+  turbo_frame_tag, turbo_stream, data-controller, data-action, Turbo Drive navigation,
+  ActionCable broadcasts, broadcast_refreshes, Hotwire architecture decisions, or Turbo Native.
 ---
 
 # Hotwire
 
 Implement Hotwire features with Turbo Drive, Turbo Frames, Turbo Streams, and Stimulus.
+
+Two kinds of reference material:
+- **Recipes** (`references/<domain>/`) — step-by-step implementation guides for concrete features.
+- **Rules** (`references/best-practices/`) — prescriptive Rails patterns, loaded when reviewing or choosing between approaches.
+
+Start with recipes when building. Cross-check rules when reviewing or deciding architecture.
 
 ## Step 1: Route to Domain
 
@@ -33,9 +37,10 @@ Identify the primary domain, then jump to that section and load references selec
 | Turbo Native iOS/Android, Strada bridge components | [Turbo Native](#turbo-native) |
 | Testing Turbo/Stimulus (system tests, unit tests, broadcasts) | [Testing](#testing) |
 | importmap-rails, jsbundling-rails, Vite, asset pipeline setup | [Asset Pipeline](#asset-pipeline) |
+| Rails-specific Hotwire rules: broadcasting, morphing, progressive enhancement, architecture | [Rails Best Practices](#rails-best-practices) |
+| Unclear domain or general question | Start with `references/common-use-cases.md`, then route from there |
 
 When the task spans multiple domains, start with the primary domain and load additional references as needed.
-For common implementation patterns, read `references/common-use-cases.md`.
 
 ---
 
@@ -287,3 +292,25 @@ Read `references/testing.md` for testing Hotwire features. Covers:
 ## Asset Pipeline
 
 Read `references/asset-pipeline.md` for JavaScript delivery setup. Covers importmap-rails (no Node, browser ESM), jsbundling-rails (esbuild/rollup/webpack), vite_rails (HMR + code splitting), Stimulus controller loading differences across approaches, and common issues.
+
+---
+
+## Rails Best Practices
+
+Prescriptive rules for Rails Hotwire code, organized by priority. Read individual reference files in `references/best-practices/` for detailed explanations and code examples. See `references/best-practices/_sections.md` for category definitions.
+
+Use `assets/templates/_template.md` when adding new rules.
+
+| Priority | Category | Impact | Prefix | Rules |
+|----------|----------|--------|--------|-------|
+| 1 | Navigation & Drive | CRITICAL | `drive-` | prefetch-links, form-submissions, visit-actions, cache-control, selective-disable, progress-bar, confirm-dialog, error-recovery |
+| 2 | Turbo Frames | CRITICAL | `frame-` | lazy-loading, scope-navigation, src-navigation, break-out, promote-visits, dom-id, empty-state |
+| 3 | Turbo Streams | HIGH | `stream-` | progressive-enhance, action-selection, multi-target, http-delivery, websocket-source, custom-actions |
+| 4 | Broadcasting & Real-Time | HIGH | `bcast-` | model-broadcasts, debounce-n1, scope-streams, refresh-over-replace, avoid-view-logic-in-models, signed-stream-names, reconnect-handling |
+| 5 | Morphing & Page Refresh | HIGH | `morph-` | enable-page-refresh, permanent-elements, scroll-preservation, stimulus-reconnect, frame-refresh, vs-streams |
+| 6 | Performance Optimization | MEDIUM-HIGH | `perf-` | optimistic-ui, batch-streams, frame-caching, prefetch-strategic, memory-leak-prevention |
+| 7 | Stimulus Patterns | MEDIUM-HIGH | `stim-` | outlets-communication, values-reactive-state, action-descriptors, small-reusable-controllers |
+| 8 | Architecture Decisions | MEDIUM | `arch-` | progressive-enhancement, frame-vs-stream-decision, importmap-management, avoid-client-state, stimulus-boundaries |
+| 9 | Testing Hotwire | MEDIUM | `test-` | system-test-async, stream-assertions, broadcast-assertions, frame-navigation, websocket-timing |
+
+Each rule file lives at `references/best-practices/<prefix>-<name>.md`.

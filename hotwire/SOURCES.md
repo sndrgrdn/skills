@@ -18,6 +18,7 @@ Provenance and coverage status for the hotwire skill.
 | SupeRails tutorials and screencasts | Secondary / Community | Medium–High | Educational content, verified against official docs |
 | GoRails tutorials | Secondary / Community | Medium–High | Educational content, community-validated patterns |
 | Hotwire community discussions (GitHub, Discord) | Secondary / Community | Medium | Community-sourced, cross-checked against source |
+| Community Rails Hotwire best-practices corpus | Secondary / Curated | High | 53 prescriptive rules across 9 categories, merged from rails-hotwire skill |
 
 ## Coverage matrix
 
@@ -39,6 +40,7 @@ Provenance and coverage status for the hotwire skill.
 | Testing patterns | Covered — `references/testing.md` covers controller/integration tests, broadcast tests, Capybara system tests, Stimulus unit tests |
 | Asset pipeline integration | Covered — `references/asset-pipeline.md` covers importmap-rails, jsbundling-rails, vite_rails, Stimulus loading, Turbo installation |
 | Advanced custom stream actions | Covered — existing references include multi-action orchestration (video playlist), localStorage side-effects, View Transitions API integration |
+| Rails best-practice rules | Covered — 53 rules in `references/best-practices/` across Drive, Frames, Streams, broadcasting, morphing, performance, Stimulus, architecture, testing |
 
 ## Open gaps
 
