@@ -1,6 +1,6 @@
 ---
 name: deslop
-description: Review recently written code for over-engineering, paranoia, defensive chaff, and LLM-generated slop. Use when asked to deslop, trim chaff, trim the fat, cut cruft, remove paranoia, check for over-engineering, simplify recent work, or do a critical review before PR. Scans a diff, checks local idiom, proposes numbered cuts, and applies only explicitly approved changes.
+description: Review recently written code for over-engineering, paranoia, defensive chaff, and LLM-generated slop. Use when asked to deslop, trim chaff, trim the fat, cut cruft, remove paranoia, check for over-engineering, simplify recent work, or do a critical review before PR. Scans a diff, checks context for intent, proposes numbered cuts, and applies only explicitly approved changes.
 ---
 
 # Deslop
@@ -31,9 +31,9 @@ Do not turn deslop into general refactoring, redesign, style review, or bug fixi
 | Step | Action | Rule |
 |------|--------|------|
 | 1 | Find scope | State exact diff/range before scanning |
-| 2 | Read neighbors | Check local idiom before flagging |
+| 2 | Check fences | Check enough context to avoid cutting intent |
 | 3 | Scan catalogs | Record candidates only; do not edit |
-| 4 | Propose cuts | Numbered findings with verdict and neighbor result |
+| 4 | Propose cuts | Numbered findings with verdict and context result |
 | 5 | Wait for approval | Apply only explicit user picks |
 | 6 | Edit and verify | Targeted cuts, syntax/lint/test when feasible |
 
@@ -56,25 +56,30 @@ Stop and ask if:
 - the diff is over 100 files; ask for path, commit range, or feature slice
 - ownership or intent is unclear enough that cuts would be guesses
 
-### Step 2: Read Neighbors Before Flagging
+### Step 2: Check Fences Before Recommending Cuts
 
-Do not flag a pattern until checking why it might exist.
+Do not use nearby slop as proof that new slop should stay. Context is evidence, not validation.
 
-Check:
+Before marking a candidate **drop**, check enough context to answer:
 
-- **same file** — is the pattern already common here?
-- **same module/folder** — is it a local convention?
-- **file history** — has the pattern existed long enough to be intentional?
+- **behavior:** does this preserve an API, framework, data, or compatibility contract?
+- **safety:** is this guard protecting a realistic failure path?
+- **consistency:** would removing it create risky inconsistency in the touched area?
 
-| Neighbor result | Action |
-|-----------------|--------|
-| local idiom | keep; mention only if important |
-| novel to file/module | flag if it matches catalog slop |
-| mixed/unclear | mark ambiguous; ask or recommend keep |
+Use the lightest check that answers the question:
 
-This is Chesterton's fence: do not remove a safeguard or convention until its purpose is understood.
+1. Same file first.
+2. Same module/folder only if same-file context is unclear.
+3. File history only for safeguards, public API, migrations, or unclear intent.
 
-**Caveat:** if surrounding code was also AI-generated recently, the neighbor check can validate accumulated slop as "local idiom." The check still applies — deslop scopes to the current diff, not codebase-wide cleanup — but note the limitation when reporting findings.
+| Context result | Action |
+|----------------|--------|
+| required fence | keep; explain the contract or safety reason |
+| repeated slop | still flag; note that nearby code repeats it |
+| novel slop | flag if it matches catalog slop |
+| unclear intent | mark not sure; ask or recommend keep |
+
+This is Chesterton's fence: understand a safeguard before cutting it. It is not a vote where surrounding slop wins by repetition.
 
 ### Step 3: Load Catalogs and Scan
 
@@ -94,7 +99,7 @@ For each candidate, record:
 - snippet
 - one-sentence reason
 - verdict: **drop**, **keep**, or **not sure**
-- neighbor result: **local idiom**, **novel**, or **ambiguous**
+- context result: **required fence**, **repeated slop**, **novel slop**, or **unclear intent**
 
 Do not edit during scanning.
 
@@ -118,7 +123,7 @@ file:line
 <why this may be slop. Note behavior/safety tradeoff if any.>
 
 **verdict:** drop | keep | not sure — <reason>
-**neighbor:** local idiom | novel | ambiguous — <evidence>
+**context:** required fence | repeated slop | novel slop | unclear intent — <evidence>
 ````
 
 End with:
@@ -162,7 +167,7 @@ Commit only if the user asked for a commit. If committing, use one scoped commit
 | Do not | Why |
 |--------|-----|
 | edit during scan | user must approve cuts first |
-| skip neighbor check | risks removing local idiom or necessary safeguard |
+| skip fence check before drops | risks removing an intentional contract or useful safeguard |
 | widen into redesign | deslop is narrow recent-diff cleanup |
 | apply from ambiguous approval | user intent is unclear |
 | mark everything as drop | honest uncertainty prevents bad cuts |
@@ -176,9 +181,9 @@ Before reporting done:
 
 - [ ] scope stated
 - [ ] relevant catalogs loaded
-- [ ] neighbor check performed for each candidate
+- [ ] fence check performed before each drop verdict
 - [ ] every finding cites file:line + snippet
-- [ ] every finding has verdict + neighbor result
+- [ ] every finding has verdict + context result
 - [ ] user explicitly approved applied cuts
 - [ ] syntax/lint/test run or skipped with reason
 - [ ] no unrelated redesign or style-only changes included
