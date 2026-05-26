@@ -12,6 +12,17 @@ require "json"
 require "open3"
 
 module FetchPrChecks
+  HUMAN_GATE_PATTERNS = [
+    /review\s+required/i,
+    /required\s+review/i,
+    /requires\s+review/i,
+    /required\s+approving\s+review/i,
+    /approval\s+required/i,
+    /waiting\s+for\s+approval/i,
+    /manual\s+approval/i,
+    /draft\s+(pull\s+request|pr)/i,
+  ].freeze
+
   FAILURE_PATTERNS = [
     # Ruby / RSpec
     /Failure\/Error/i,
@@ -44,29 +55,30 @@ module FetchPrChecks
     # General
     /error[:\s]/i,
     /failed[:\s]/i,
+    /failure[:\s]/i,
+    /traceback/i,
+    /exception/i,
     /panic:/i,
     /fatal:/i,
   ].freeze
 
   class << self
-    def run_gh(args)
-      stdout, stderr, status = Open3.capture3("gh", *args)
-      return nil unless status.success? && !stdout.strip.empty?
+    def run_gh(args, allowed_codes: [0])
+      stdout, _stderr, status = Open3.capture3("gh", *args)
+      return nil unless allowed_codes.include?(status.exitstatus) && !stdout.strip.empty?
 
       JSON.parse(stdout)
     rescue JSON::ParserError
       nil
     end
 
-    def run_gh_raw(args, allowed_codes: [0])
-      stdout, stderr, status = Open3.capture3("gh", *args)
-      return stdout if allowed_codes.include?(status.exitstatus)
-
-      nil
+    def human_gate_check?(check)
+      haystack = %w[name state description workflow].map { |field| check[field].to_s }.join(" ")
+      HUMAN_GATE_PATTERNS.any? { |pattern| haystack.match?(pattern) }
     end
 
     def get_pr_info(pr_number = nil)
-      args = ["pr", "view", "--json", "number,url,headRefName,baseRefName"]
+      args = ["pr", "view", "--json", "number,url,headRefName,baseRefName,isDraft,reviewDecision"]
       args.insert(2, pr_number.to_s) if pr_number
       run_gh(args)
     end
@@ -74,9 +86,17 @@ module FetchPrChecks
     def get_checks(pr_number = nil)
       args = ["pr", "checks"]
       args << pr_number.to_s if pr_number
+      args.concat(["--json", "name,bucket,link,workflow,state,description,event"])
 
-      stdout, _stderr, _status = Open3.capture3("gh", *args)
+      stdout, _stderr, status = Open3.capture3("gh", *args)
       return [] if stdout.strip.empty?
+
+      begin
+        checks = JSON.parse(stdout)
+        return checks if checks.is_a?(Array)
+      rescue JSON::ParserError
+        # fall through to tab parsing
+      end
 
       stdout.strip.split("\n").filter_map do |line|
         parts = line.split("\t")
@@ -86,6 +106,7 @@ module FetchPrChecks
           "name" => parts[0]&.strip,
           "bucket" => parts[1]&.strip,
           "link" => parts[3]&.strip || "",
+          "workflow" => "",
         }
       end
     rescue StandardError
@@ -137,6 +158,20 @@ module FetchPrChecks
       nil
     end
 
+    def action_required(pr_info:, processed:, summary:)
+      if pr_info["isDraft"] && processed.empty?
+        "Draft PR has no registered checks; do not wait for CI indefinitely"
+      elsif processed.empty?
+        "No registered checks; monitor before reporting NO_CHECKS_REGISTERED"
+      elsif summary["actionable_pending"] > 0
+        "Wait for actionable checks to finish; poll feedback while waiting"
+      elsif summary["failed"] > 0
+        "Address failed checks"
+      elsif summary["pending"] > 0 && summary["actionable_pending"] == 0
+        "Only human review or approval gates remain pending"
+      end
+    end
+
     def run(pr_number: nil)
       pr_info = get_pr_info(pr_number)
       unless pr_info
@@ -146,21 +181,28 @@ module FetchPrChecks
 
       pr_num = pr_info["number"]
       branch = pr_info["headRefName"]
-
       checks = get_checks(pr_num)
       failed_runs = nil
 
       processed = checks.map do |check|
+        status = check["bucket"] || check["state"] || "unknown"
+        human_gate = status == "pending" && human_gate_check?(check)
+
         result = {
           "name" => check["name"] || "unknown",
-          "status" => check["bucket"] || "unknown",
+          "status" => status,
           "link" => check["link"] || "",
+          "workflow" => check["workflow"] || "",
         }
+        result["state"] = check["state"] if check["state"]
+        result["description"] = check["description"] if check["description"]
+        result["human_gate"] = true if human_gate
 
         if result["status"] == "fail"
           failed_runs ||= get_failed_runs(branch)
 
-          matching = failed_runs.find { |r| (result["name"]).include?(r["name"]) || r["name"].include?(result["name"]) }
+          workflow_name = result["workflow"].to_s.empty? ? result["name"] : result["workflow"]
+          matching = failed_runs.find { |r| workflow_name.include?(r["name"]) || r["name"].include?(workflow_name) }
           if matching
             logs = get_run_logs(matching["databaseId"])
             if logs
@@ -173,22 +215,31 @@ module FetchPrChecks
         result
       end
 
+      summary = {
+        "total" => processed.length,
+        "passed" => processed.count { |c| c["status"] == "pass" },
+        "failed" => processed.count { |c| c["status"] == "fail" },
+        "pending" => processed.count { |c| c["status"] == "pending" },
+        "actionable_pending" => processed.count { |c| c["status"] == "pending" && !c["human_gate"] },
+        "human_gate_pending" => processed.count { |c| c["status"] == "pending" && c["human_gate"] },
+        "skipped" => processed.count { |c| %w[skipping cancel].include?(c["status"]) },
+      }
+
       output = {
         "pr" => {
           "number" => pr_num,
           "url" => pr_info["url"] || "",
           "branch" => branch,
           "base" => pr_info["baseRefName"] || "",
+          "is_draft" => !!pr_info["isDraft"],
+          "review_decision" => pr_info["reviewDecision"] || "",
         },
-        "summary" => {
-          "total" => processed.length,
-          "passed" => processed.count { |c| c["status"] == "pass" },
-          "failed" => processed.count { |c| c["status"] == "fail" },
-          "pending" => processed.count { |c| c["status"] == "pending" },
-          "skipped" => processed.count { |c| ["skipping", "cancel"].include?(c["status"]) },
-        },
+        "summary" => summary,
         "checks" => processed,
       }
+
+      required = action_required(pr_info: pr_info, processed: processed, summary: summary)
+      output["action_required"] = required if required
 
       puts JSON.pretty_generate(output)
     end

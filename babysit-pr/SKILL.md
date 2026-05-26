@@ -1,158 +1,106 @@
 ---
 name: babysit-pr
-description: Babysit a PR until CI passes and review feedback is addressed. Use when asked to "fix CI", "fix failing checks", "babysit PR", "iterate on PR", "address review feedback", "make CI green", "fix the build", or "keep pushing until it passes".
+description: Babysit a PR until actionable CI passes and high/medium review feedback is addressed. Use for PR CI failures, review feedback, or green-check loops; do not wait for human approval, draft status, or merge gates.
 ---
 
 # Babysit PR Until CI Passes
 
-Continuously iterate on the current branch until all CI checks pass and review feedback is addressed.
+Goal: fix actionable CI failures and high/medium review feedback. Stop and report human approval, draft-readiness, and merge-readiness gates.
 
-**Requires**: GitHub CLI (`gh`) authenticated, Ruby available.
-
-**Important**: Run all scripts from the repository root. Use full path via `${SKILL_ROOT}` to reference scripts.
+Requires:
+- authenticated `gh`
+- Ruby available
+- target repository root as cwd
+- skill-root-relative script paths, for example `${SKILL_ROOT}/scripts/fetch_pr_checks.rb`
 
 ## Bundled Scripts
 
-### `scripts/fetch_pr_checks.rb`
+| Script | Run | Output |
+|--------|-----|--------|
+| `scripts/fetch_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb [--pr NUMBER]` | JSON: `pr`, `summary`, `checks`, failure snippets |
+| `scripts/fetch_pr_feedback.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_feedback.rb [--pr NUMBER]` | JSON buckets: `high`, `medium`, `low`, `bot`, `resolved` |
+| `scripts/monitor_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/monitor_pr_checks.rb [--pr NUMBER]` | terminal marker plus tab-separated checks |
 
-Fetch CI check status and extract failure snippets from logs.
+Check summary fields include `failed`, `pending`, `actionable_pending`, and `human_gate_pending`.
 
-```bash
-ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb [--pr NUMBER]
-```
-
-Returns JSON:
-```json
-{
-  "pr": {"number": 123, "branch": "feat/foo"},
-  "summary": {"total": 5, "passed": 3, "failed": 2, "pending": 0},
-  "checks": [
-    {"name": "rspec_tests", "status": "fail", "log_snippet": "...", "run_id": 123},
-    {"name": "rubocop", "status": "pass"}
-  ]
-}
-```
-
-### `scripts/fetch_pr_feedback.rb`
-
-Fetch and categorize PR review feedback by priority.
-
-```bash
-ruby ${SKILL_ROOT}/scripts/fetch_pr_feedback.rb [--pr NUMBER]
-```
-
-Returns JSON with feedback categorized as:
-- `high` — must address before merge (blockers, security, changes requested)
-- `medium` — should address (standard feedback)
-- `low` — optional (nit, style, suggestion)
-- `bot` — informational automated comments (skip silently)
-- `resolved` — already resolved threads
-
-Review bot feedback (Copilot, Devin, Cursor, Bugbot, CodeQL) appears in `high`/`medium`/`low` with `review_bot: true` — NOT in the `bot` bucket.
-
-### `scripts/monitor_pr_checks.rb`
-
-Monitor PR checks until all reach a terminal state.
-
-```bash
-ruby ${SKILL_ROOT}/scripts/monitor_pr_checks.rb [--pr NUMBER]
-```
-
-Prints one terminal marker followed by a tab-separated check summary:
+Monitor markers:
 - `ALL_CHECKS_PASSED`
 - `CHECKS_DONE_WITH_FAILURES`
+- `NO_CHECKS_REGISTERED`
+- `DRAFT_PR_WITH_NO_CHECKS`
+- `CHECKS_BLOCKED_BY_REVIEW_GATE`
 
 ## Workflow
 
 ### 1. Identify PR
 
+Run:
 ```bash
-gh pr view --json number,url,headRefName
+gh pr view --json number,url,headRefName,isDraft,reviewDecision
 ```
 
-Stop if no PR exists for the current branch.
+Stop when:
+- no PR exists
+- draft PR has no checks after monitor grace period: report `DRAFT_PR_WITH_NO_CHECKS`
 
-### 2. Gather Review Feedback
+Draft rule: inspect existing checks/feedback only. Do not mark ready for review unless asked.
 
-Run `fetch_pr_feedback.rb` to get categorized feedback.
+### 2. Handle Feedback
 
-### 3. Handle Feedback by Priority
+Run `ruby ${SKILL_ROOT}/scripts/fetch_pr_feedback.rb [--pr NUMBER]`.
 
-**Auto-fix (no prompt):**
-- `high` — must address (blockers, security, changes requested)
-- `medium` — should address (standard feedback)
+| Bucket | Action |
+|--------|--------|
+| `high` | fix |
+| `medium` | fix |
+| `low` | ask user which to address |
+| `bot` | skip informational comments |
+| `resolved` | skip |
 
-When fixing feedback:
-- Understand root cause, not just surface symptom
-- Check for similar issues in nearby code or related files
-- Fix all instances, not just the one mentioned
+Feedback fix checklist:
+- verify root cause
+- search related code
+- fix all instances
+- for `review_bot: true`: fix real issues, explain false positives
 
-Review bot feedback (items with `review_bot: true`) — treat same as human feedback:
-- Real issue → fix it
-- False positive → skip, but explain why
-- Never silently ignore review bot feedback
-
-**Prompt user for selection:**
-- `low` — present numbered list:
-
-```
+Low-priority prompt format:
+```text
 Found 3 low-priority suggestions:
-1. [nit] "Consider renaming this variable" - @reviewer in app/models/order.rb:42
-2. [style] "Could use a guard clause" - @reviewer in app/controllers/orders_controller.rb:18
-3. [minor] "Add a comment" - @reviewer in app/interactors/create_order.rb:55
+1. [l] "Consider renaming this variable" - @reviewer in app/models/order.rb:42
+2. [nit] "Could use a guard clause" - @reviewer in app/controllers/orders_controller.rb:18
+3. [style] "Add a comment" - @reviewer in app/interactors/create_order.rb:55
 
-Which would you like to address? (e.g., "1,3" or "all" or "none")
+Which should I address? ("1,3", "all", or "none")
 ```
 
-**Skip silently:**
-- `resolved` threads
-- `bot` comments (github-actions, dependabot, etc.)
+### 3. Check CI Status
 
-### 4. Check CI Status
+Run `ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb [--pr NUMBER]`.
 
-Run `fetch_pr_checks.rb` to get structured failure data.
+| State | Action |
+|-------|--------|
+| `failed > 0` and `actionable_pending == 0` | fix failures |
+| `actionable_pending > 0` | wait; poll feedback while waiting |
+| `pending > 0` and `actionable_pending == 0` | report `CHECKS_BLOCKED_BY_REVIEW_GATE` |
+| no checks after grace period | report `NO_CHECKS_REGISTERED` or `DRAFT_PR_WITH_NO_CHECKS` |
+| all actionable checks passed | run post-CI feedback check |
 
-**Wait if pending:** If review bot checks (Copilot, Devin, CodeQL) are still running, wait — they post actionable feedback. Info bots (codecov) are not worth waiting for.
+Wait for actionable review bots: copilot, devin, cursor, bugbot, codeql.
+Do not wait for approval, `isDraft`, `REVIEW_REQUIRED`, Codecov, or informational bots.
 
-### 5. Triage CI Failures — Flaky vs Real
-
-Before fixing, determine whether each failure is **real** (caused by PR changes) or **flaky** (pre-existing / intermittent).
-
-**Flaky test indicators** (any of these suggest flakiness):
-- Failure is in code not touched by the PR (`git diff main...HEAD` doesn't include the failing file or its direct dependencies)
-- Timing/race condition patterns: element not visible, timeout, connection refused, "expected X to be on page"
-- The same test passed in a previous CI run on the same branch
-- Infrastructure errors: container startup, network, OOM, service unavailable
-
-**When flaky tests are detected:**
-
-1. Confirm flakiness — check PR diff to rule out indirect causes
-2. Re-run only the failed jobs:
-   ```bash
-   gh run rerun <run_id> --failed
-   ```
-3. Monitor the re-run with `monitor_pr_checks.rb`
-4. If the same test fails again after re-run, investigate whether the PR could be an indirect cause (e.g., adding a gem that changes global behavior, changing shared infrastructure)
-5. **Max 1 automatic re-run per workflow run.** After that, report the persistent failure and ask for guidance
-6. If confirmed unrelated after investigation, note it and move on — do not block the PR on pre-existing flaky tests
-
-### 6. Fix Real CI Failures
-
-**Investigation is mandatory before any fix.** Do not guess from the check name or surface error.
+### 4. Fix CI Failures
 
 For each failure:
+1. read full log: `gh run view <run-id> --log-failed`
+2. trace from assertion/exception/lint rule to source
+3. state the cause before editing: "fails because X, affected by Y"
+4. search related call sites/patterns
+5. fix root cause, not symptom
+6. add focused test coverage when needed
 
-1. **Read the full log.** Use `gh run view --log-failed` if the snippet is truncated. Identify the exact failing assertion, exception, or lint rule.
-2. **Trace backwards from failure to cause.** Follow the stack trace into source code. Read relevant functions and call sites. Do not stop at the first plausible explanation.
-3. **Verify understanding before touching code.** State: "This fails because X, which was introduced/affected by Y." If you cannot state that clearly, keep investigating.
-4. **Do not assume feedback is wrong.** Investigate fully before concluding false positive.
-5. **Check for related instances.** If a bug exists at one call site, search for the same pattern nearby. Fix all instances.
-6. **Fix root cause with minimal changes.** No papering over symptoms.
-7. **Extend tests when needed.** If the fix introduces uncovered behavior, add a test case.
+### 5. Verify Locally, Then Commit and Push
 
-### 7. Verify Locally, Then Commit and Push
-
-Before committing, verify fixes locally:
+Before commit:
 
 | Failure type | Local verify command |
 |---|---|
@@ -172,35 +120,32 @@ git push
 
 Commit style: lowercase, descriptive, no conventional commit prefix. Match existing repo convention.
 
-### 8. Monitor CI and Address Feedback
+### 6. Monitor CI and Address Feedback
 
-Loop instead of blocking:
+Loop:
+1. run `ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb`
+2. handle table in step 3
+3. while `actionable_pending > 0`, run `ruby ${SKILL_ROOT}/scripts/fetch_pr_feedback.rb`
+4. fix new high/medium feedback immediately
+5. if changed, verify, commit, push, restart loop
+6. otherwise sleep 30 seconds and repeat
+7. after checks pass, wait 10 seconds, fetch feedback once more
+8. if new high/medium feedback exists, return to step 4
 
-1. Run `fetch_pr_checks.rb` for current CI status
-2. All checks passed → proceed to exit conditions
-3. Any checks failed (none pending) → return to step 5 (triage flaky vs real)
-4. Checks still pending:
-   a. Run `fetch_pr_feedback.rb` for new review feedback
-   b. Address any new high/medium feedback immediately
-   c. If changes needed, commit and push (restarts CI), continue monitoring
-   d. Sleep 30 seconds, repeat from sub-step 1
-5. After all checks pass, wait 10 seconds, then run `fetch_pr_feedback.rb`. Address any new high/medium feedback — if changes needed, return to step 6.
-
-### 9. Repeat
-
-If step 8 required code changes (new feedback after CI passed), return to step 2 for a fresh cycle.
+Optional: run `ruby ${SKILL_ROOT}/scripts/monitor_pr_checks.rb` in background; restart after every push.
 
 ## Exit Conditions
 
-**Success:** All checks pass (or only confirmed-flaky tests remain), post-CI feedback re-check is clean, user has decided on low-priority items.
-
-**Ask for help:** Same real failure after 2 attempts, feedback needs clarification, infrastructure issues, flaky test persists after re-run and indirect cause is suspected.
-
-**Stop:** No PR exists, branch needs rebase.
+| Exit | Conditions |
+|------|------------|
+| Success | actionable CI passed; post-CI feedback clean; low-priority choice handled |
+| Ask user | same failure after 2 attempts; feedback unclear; infrastructure issue |
+| Stop | no PR; branch needs rebase; no checks; draft no-checks; only human gates remain |
 
 ## Fallback
 
 If scripts fail, use `gh` CLI directly:
-- `gh pr checks`
-- `gh run view --log-failed`
+- `gh pr view --json number,url,headRefName,isDraft,reviewDecision`
+- `gh pr checks --json name,state,bucket,description,link`
+- `gh run view <run-id> --log-failed`
 - `gh api repos/{owner}/{repo}/pulls/{number}/comments`

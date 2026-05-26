@@ -8,10 +8,10 @@
 #
 # Output: JSON to stdout with categorized feedback.
 #
-# Categories:
-# - high: Must address before merge (blockers, security, changes requested)
-# - medium: Should address (standard feedback)
-# - low: Optional suggestions (nit, style, consider)
+# Categories (LOGAF scale):
+# - high: Must address before merge (h:, blocker, changes requested)
+# - medium: Should address (m:, standard feedback)
+# - low: Optional suggestions (l:, nit, style)
 # - bot: Informational automated comments (skip silently)
 # - resolved: Already resolved threads
 
@@ -19,28 +19,37 @@ require "json"
 require "open3"
 
 module FetchPrFeedback
-  # Bots that provide actionable code review feedback.
-  # Categorized by content into high/medium/low with review_bot: true.
   REVIEW_BOT_PATTERNS = [
-    /\Acopilot/i,
-    /\Adevin/i,
+    /\Asentry/i,
+    /\Awarden/i,
     /\Acursor/i,
     /\Abugbot/i,
+    /\Aseer/i,
+    /\Acopilot/i,
+    /\Acodex/i,
+    /\Aclaude/i,
+    /\Adevin/i,
     /\Acodeql/i,
     /\Agithub-advanced-security/i,
   ].freeze
 
-  # Bots that post informational status reports. Skipped silently.
   INFO_BOT_PATTERNS = [
-    /\Agithub-actions/i,
+    /\Acodecov/i,
     /\Adependabot/i,
     /\Arenovate/i,
+    /\Agithub-actions/i,
     /\Amergify/i,
-    /\Acodecov/i,
+    /\Asemantic-release/i,
     /\Asonarcloud/i,
     /\Asnyk/i,
     /bot\z/i,
     /\[bot\]\z/i,
+  ].freeze
+
+  LOGAF_PATTERNS = [
+    [/^\s*(?:h:|h\s*:|high:|\[h\])/i, "high"],
+    [/^\s*(?:m:|m\s*:|medium:|\[m\])/i, "medium"],
+    [/^\s*(?:l:|l\s*:|low:|\[l\])/i, "low"],
   ].freeze
 
   HIGH_PATTERNS = [
@@ -102,8 +111,19 @@ module FetchPrFeedback
       INFO_BOT_PATTERNS.any? { |p| p.match?(username) }
     end
 
+    def detect_logaf(body)
+      LOGAF_PATTERNS.each do |pattern, level|
+        return level if body.match?(pattern)
+      end
+      nil
+    end
+
     def categorize_comment(body, author)
       return "bot" if info_bot?(author) && !review_bot?(author)
+
+      logaf = detect_logaf(body)
+      return logaf if logaf
+
       return "high" if HIGH_PATTERNS.any? { |p| p.match?(body) }
       return "low" if LOW_PATTERNS.any? { |p| p.match?(body) }
 
@@ -192,7 +212,6 @@ module FetchPrFeedback
 
       feedback = { "high" => [], "medium" => [], "low" => [], "bot" => [], "resolved" => [] }
 
-      # Process reviews for changes_requested
       (pr_info["reviews"] || []).each do |review|
         next unless review["state"] == "CHANGES_REQUESTED"
 
@@ -205,7 +224,6 @@ module FetchPrFeedback
         feedback["high"] << item
       end
 
-      # Process review threads
       threads = get_review_threads(owner, repo, pr_num)
       threads.each do |thread|
         comments = thread.dig("comments", "nodes") || []
@@ -241,7 +259,6 @@ module FetchPrFeedback
         end
       end
 
-      # Process issue comments
       issue_comments = get_issue_comments(owner, repo, pr_num)
       issue_comments.each do |comment|
         author = comment.dig("user", "login") || ""
