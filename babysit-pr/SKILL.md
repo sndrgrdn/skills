@@ -90,14 +90,24 @@ Do not wait for approval, `isDraft`, `REVIEW_REQUIRED`, Codecov, or informationa
 
 ### 4. Fix CI Failures
 
+Skip `Final Test Result` — it is a meta-check that only reflects upstream failures.
+
+Priority order:
+
+| Category | Examples | Signal source |
+|----------|----------|---------------|
+| test | `Test Report` (aggregated), `cucumber_tests (*)`, `rspec_tests (*)`, `js_tests` | `annotations` array from script output |
+| lint | `rubocop`, `eslint`, `brakeman` | `annotations` or `log_snippet` |
+| infra | `asset_precompile`, `migrate` | `log_snippet` |
+
 For each failure:
 1. check `annotations` array first — each entry has `path`, `line`, `title`, `message`; use these to jump directly to source
 2. if no annotations, read full log: `gh run view <run-id> --log-failed`
 3. trace from assertion/exception/lint rule to source
-3. state the cause before editing: "fails because X, affected by Y"
-4. search related call sites/patterns
-5. fix root cause, not symptom
-6. add focused test coverage when needed
+4. state the cause before editing: "fails because X, affected by Y"
+5. search related call sites/patterns
+6. fix root cause, not symptom
+7. add focused test coverage when needed
 
 ### 5. Verify Locally, Then Commit and Push
 

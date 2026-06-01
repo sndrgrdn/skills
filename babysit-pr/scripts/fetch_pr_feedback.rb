@@ -234,8 +234,8 @@ module FetchPrFeedback
         body = first["body"] || ""
         next if author == pr_author || body.strip.length < 3
 
-        is_resolved = thread["isResolved"] || false
-        is_outdated = thread["isOutdated"] || false
+        is_resolved = thread["isResolved"]
+        is_outdated = thread["isOutdated"]
         thread_id = thread["id"]
 
         item = build_item(

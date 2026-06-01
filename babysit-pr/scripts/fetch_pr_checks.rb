@@ -149,10 +149,7 @@ module FetchPrChecks
     end
 
     def get_run_logs(run_id)
-      stdout, _stderr, _status = Open3.capture3(
-        "gh", "run", "view", run_id.to_s, "--log-failed",
-        timeout: 60
-      )
+      stdout, _stderr, _status = Open3.capture3("gh", "run", "view", run_id.to_s, "--log-failed")
       stdout.empty? ? nil : stdout
     rescue StandardError
       nil
@@ -167,11 +164,31 @@ module FetchPrChecks
       nil
     end
 
+    # Meta-checks that only reflect upstream results — skip log/annotation fetching
+    META_CHECKS = ["Final Test Result"].freeze
+
+    def meta_check?(name)
+      META_CHECKS.include?(name)
+    end
+
     def extract_check_run_id(link)
       return nil if link.to_s.empty?
       return nil if link.include?("/actions/runs/")
       m = link.match(%r{/runs/(\d+)})
       m ? m[1].to_i : nil
+    end
+
+    def extract_job_id(link)
+      return nil if link.to_s.empty?
+      m = link.match(%r{/actions/runs/\d+/job/(\d+)})
+      m ? m[1].to_i : nil
+    end
+
+    def get_job_logs(job_id)
+      stdout, _stderr, _status = Open3.capture3("gh", "run", "view", "--log-failed", "--job", job_id.to_s)
+      stdout.empty? ? nil : stdout
+    rescue StandardError
+      nil
     end
 
     def get_annotations(repo_nwo, check_run_id)
@@ -215,7 +232,6 @@ module FetchPrChecks
 
       pr_num = pr_info["number"]
       branch = pr_info["headRefName"]
-      sha = pr_info["headRefOid"]
       checks = get_checks(pr_num)
       failed_runs = nil
       repo_nwo = nil
@@ -234,7 +250,9 @@ module FetchPrChecks
         result["description"] = check["description"] if check["description"]
         result["human_gate"] = true if human_gate
 
-        if result["status"] == "fail"
+        if result["status"] == "fail" && meta_check?(result["name"])
+          result["meta_check"] = true
+        elsif result["status"] == "fail"
           # Fast path: structured annotations from the check run API
           check_run_id = extract_check_run_id(result["link"])
           if check_run_id
@@ -257,7 +275,17 @@ module FetchPrChecks
             end
           end
 
-          # Fallback: parse logs when annotations unavailable
+          # Second path: per-job failure logs for job-link URLs (lint, individual test shards)
+          unless result["log_snippet"]
+            job_id = extract_job_id(result["link"])
+            if job_id
+              result["job_id"] = job_id
+              logs = get_job_logs(job_id)
+              result["log_snippet"] = extract_failure_snippet(logs) if logs
+            end
+          end
+
+          # Last fallback: full run logs
           unless result["log_snippet"]
             failed_runs ||= get_failed_runs(branch)
             workflow_name = result["workflow"].to_s.empty? ? result["name"] : result["workflow"]
