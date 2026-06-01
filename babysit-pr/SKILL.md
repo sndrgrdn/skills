@@ -20,6 +20,7 @@ Requires:
 | `scripts/fetch_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb [--pr NUMBER]` | JSON: `pr`, `summary`, `checks` with `annotations` (fast path) or `log_snippet` (fallback) |
 | `scripts/fetch_pr_feedback.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_feedback.rb [--pr NUMBER]` | JSON buckets: `high`, `medium`, `low`, `bot`, `resolved` |
 | `scripts/monitor_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/monitor_pr_checks.rb [--pr NUMBER]` | terminal marker plus tab-separated checks |
+| `scripts/reply_to_thread.rb` | `ruby ${SKILL_ROOT}/scripts/reply_to_thread.rb THREAD_ID BODY [...]` | JSON reply results |
 
 Check summary fields include `failed`, `pending`, `actionable_pending`, and `human_gate_pending`.
 
