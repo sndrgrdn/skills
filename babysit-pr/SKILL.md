@@ -17,7 +17,7 @@ Requires:
 
 | Script | Run | Output |
 |--------|-----|--------|
-| `scripts/fetch_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb [--pr NUMBER]` | JSON: `pr`, `summary`, `checks`, failure snippets |
+| `scripts/fetch_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_checks.rb [--pr NUMBER]` | JSON: `pr`, `summary`, `checks` with `annotations` (fast path) or `log_snippet` (fallback) |
 | `scripts/fetch_pr_feedback.rb` | `ruby ${SKILL_ROOT}/scripts/fetch_pr_feedback.rb [--pr NUMBER]` | JSON buckets: `high`, `medium`, `low`, `bot`, `resolved` |
 | `scripts/monitor_pr_checks.rb` | `ruby ${SKILL_ROOT}/scripts/monitor_pr_checks.rb [--pr NUMBER]` | terminal marker plus tab-separated checks |
 
@@ -91,8 +91,9 @@ Do not wait for approval, `isDraft`, `REVIEW_REQUIRED`, Codecov, or informationa
 ### 4. Fix CI Failures
 
 For each failure:
-1. read full log: `gh run view <run-id> --log-failed`
-2. trace from assertion/exception/lint rule to source
+1. check `annotations` array first — each entry has `path`, `line`, `title`, `message`; use these to jump directly to source
+2. if no annotations, read full log: `gh run view <run-id> --log-failed`
+3. trace from assertion/exception/lint rule to source
 3. state the cause before editing: "fails because X, affected by Y"
 4. search related call sites/patterns
 5. fix root cause, not symptom

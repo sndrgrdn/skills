@@ -78,7 +78,7 @@ module FetchPrChecks
     end
 
     def get_pr_info(pr_number = nil)
-      args = ["pr", "view", "--json", "number,url,headRefName,baseRefName,isDraft,reviewDecision"]
+      args = ["pr", "view", "--json", "number,url,headRefName,baseRefName,isDraft,reviewDecision,headRefOid"]
       args.insert(2, pr_number.to_s) if pr_number
       run_gh(args)
     end
@@ -158,6 +158,40 @@ module FetchPrChecks
       nil
     end
 
+    def get_repo_nwo
+      stdout, _stderr, status = Open3.capture3("gh", "repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner")
+      return nil unless status.exitstatus == 0
+      nwo = stdout.strip
+      nwo.empty? ? nil : nwo
+    rescue StandardError
+      nil
+    end
+
+    def extract_check_run_id(link)
+      return nil if link.to_s.empty?
+      return nil if link.include?("/actions/runs/")
+      m = link.match(%r{/runs/(\d+)})
+      m ? m[1].to_i : nil
+    end
+
+    def get_annotations(repo_nwo, check_run_id)
+      return [] unless repo_nwo && check_run_id
+      result = run_gh(["api", "repos/#{repo_nwo}/check-runs/#{check_run_id}/annotations"])
+      result.is_a?(Array) ? result : []
+    rescue StandardError
+      []
+    end
+
+    def format_annotation_snippet(annotations)
+      lines = annotations.map do |a|
+        location = "#{a['path']}:#{a['start_line']}"
+        title = a["title"] || "Error"
+        message = (a["message"] || "").split("\n").first(3).join("\n")
+        "\u2717 #{title}\n  #{location}\n  #{message}"
+      end
+      lines.join("\n\n")
+    end
+
     def action_required(pr_info:, processed:, summary:)
       if pr_info["isDraft"] && processed.empty?
         "Draft PR has no registered checks; do not wait for CI indefinitely"
@@ -181,8 +215,10 @@ module FetchPrChecks
 
       pr_num = pr_info["number"]
       branch = pr_info["headRefName"]
+      sha = pr_info["headRefOid"]
       checks = get_checks(pr_num)
       failed_runs = nil
+      repo_nwo = nil
 
       processed = checks.map do |check|
         status = check["bucket"] || check["state"] || "unknown"
@@ -199,15 +235,39 @@ module FetchPrChecks
         result["human_gate"] = true if human_gate
 
         if result["status"] == "fail"
-          failed_runs ||= get_failed_runs(branch)
+          # Fast path: structured annotations from the check run API
+          check_run_id = extract_check_run_id(result["link"])
+          if check_run_id
+            repo_nwo ||= get_repo_nwo
+            if repo_nwo
+              annotations = get_annotations(repo_nwo, check_run_id)
+              failure_annotations = annotations.select { |a| a["annotation_level"] == "failure" }
+              if failure_annotations.any?
+                result["annotations"] = failure_annotations.map do |a|
+                  {
+                    "path" => a["path"],
+                    "line" => a["start_line"],
+                    "title" => a["title"],
+                    "message" => a["message"],
+                  }
+                end
+                result["log_snippet"] = format_annotation_snippet(failure_annotations)
+                result["check_run_id"] = check_run_id
+              end
+            end
+          end
 
-          workflow_name = result["workflow"].to_s.empty? ? result["name"] : result["workflow"]
-          matching = failed_runs.find { |r| workflow_name.include?(r["name"]) || r["name"].include?(workflow_name) }
-          if matching
-            logs = get_run_logs(matching["databaseId"])
-            if logs
-              result["log_snippet"] = extract_failure_snippet(logs)
-              result["run_id"] = matching["databaseId"]
+          # Fallback: parse logs when annotations unavailable
+          unless result["log_snippet"]
+            failed_runs ||= get_failed_runs(branch)
+            workflow_name = result["workflow"].to_s.empty? ? result["name"] : result["workflow"]
+            matching = failed_runs.find { |r| workflow_name.include?(r["name"]) || r["name"].include?(workflow_name) }
+            if matching
+              logs = get_run_logs(matching["databaseId"])
+              if logs
+                result["log_snippet"] = extract_failure_snippet(logs)
+                result["run_id"] = matching["databaseId"]
+              end
             end
           end
         end
