@@ -1,132 +1,128 @@
 ---
 name: humanizer
-version: 3.1.0
+version: 5.1.0
 description: |
-  Remove signs of AI-generated writing from text. Use when asked to "humanize"
-  text, "make it sound human", "remove AI patterns", "de-slop writing",
-  "rewrite to sound natural", or when text "sounds like ChatGPT" or "reads
-  like AI". Detects and rewrites 31 AI writing patterns including inflated
-  significance, promotional language, AI vocabulary (with era-specific tells
-  for GPT-4/4o/5), em dash overuse, rule of three, vague attributions,
-  sycophantic tone, filler phrases, negative parallelisms, unnecessary tables,
-  markdown artifacts, and generic conclusions.
+  Rewrite AI-sounding prose so it reads like a real person wrote it. Use when
+  asked to humanize text, make writing sound natural, remove ChatGPT/LLM tells,
+  de-slop prose, de-AI a document, make text less robotic, or audit writing for
+  signs of AI generation. Covers one-reference-per-pattern guidance for phrasing,
+  structure, formatting artifacts, citations/markup leakage, and canned chatbot
+  correspondence.
 license: MIT
 ---
 
 # Humanizer
 
-Remove AI writing patterns and add human voice.
+Rewrite AI-sounding text into natural human prose without laundering facts, flattening voice, or merely hiding surface tells.
 
-## Task
+## Operating rule
 
-1. Read `references/patterns.md` for the full 31-pattern catalog.
-2. Scan input text against every pattern.
-3. Rewrite problematic sections with natural alternatives.
-4. Preserve core meaning and intended tone.
-5. Add personality — clean-but-soulless is as obvious as slop.
-6. Run the two-pass anti-AI audit (see [Process](#process)).
+Do not treat AI signs as a guilty verdict. Treat them as rewrite targets. Preserve meaning, remove generic smoothing, restore specificity, and keep the output appropriate to the user's venue.
 
-## Pattern quick reference
+## Voice matching
 
-Scan for all of these. Full definitions, signal words, and before/after examples are in `references/patterns.md`.
+## Runtime workflow
 
-| # | Pattern | Key tells |
-|---|---------|-----------|
-| 1 | Significance inflation | "pivotal moment", "testament to", "evolving landscape" |
-| 2 | Notability inflation | "featured in", "active social media presence" |
-| 3 | Superficial -ing analyses | "highlighting...", "showcasing...", "reflecting..." |
-| 4 | Promotional language | "nestled", "vibrant", "groundbreaking", "breathtaking" |
-| 5 | Vague attributions | "Experts argue", "Industry reports" |
-| 6 | Formulaic challenges sections | "Despite challenges... continues to thrive" |
-| 7 | AI vocabulary | "delve", "crucial", "tapestry", "underscore", "foster", "bolstered", "robust", "meticulous" — shifts by model era |
-| 8 | Copula avoidance | "serves as", "stands as", "boasts", "maintains", "refers to" instead of "is"/"has" |
-| 9 | Negative parallelisms | "It's not just X; it's Y", tailing "no guessing" |
-| 10 | Rule of three | Forced triplets for fake comprehensiveness |
-| 11 | Synonym cycling | "protagonist"→"main character"→"central figure"→"hero" |
-| 12 | False ranges | "from X to Y" without a meaningful scale |
-| 13 | Passive voice / subjectless fragments | "No configuration needed" |
-| 14 | Em dash overuse | Punchy sales-writing dashes everywhere |
-| 15 | Boldface overuse | Mechanical emphasis on every term |
-| 16 | Inline-header lists | `- **Label:** description` pattern |
-| 17 | Title Case headings | Every Main Word Capitalized |
-| 18 | Emojis | 🚀💡✅ decorating headers or bullets |
-| 19 | Curly quotes | "smart quotes" instead of "straight quotes" |
-| 20 | Chatbot artifacts | "I hope this helps!", "Let me know if..." |
-| 21 | Knowledge-cutoff disclaimers | "as of my last update", "based on available information" |
-| 22 | Sycophantic tone | "Great question!", "You're absolutely right!" |
-| 23 | Filler phrases | "In order to", "It is important to note that" |
-| 24 | Excessive hedging | "could potentially possibly be argued" |
-| 25 | Generic positive conclusions | "The future looks bright", "exciting times ahead" |
-| 26 | Hyphenated pair overuse | Perfectly consistent "cross-functional", "data-driven" |
-| 27 | Persuasive authority tropes | "The real question is", "at its core" |
-| 28 | Signposting | "Let's dive in", "here's what you need to know" |
-| 29 | Fragmented headers | Heading → one-line restatement → actual content |
-| 30 | Unnecessary tables | Small 2–3 row tables where prose would suffice |
-| 31 | Markdown formatting artifacts | Raw `**bold**`, `## headers`, `- ` lists leaking into non-Markdown contexts |
+1. Identify the target venue: email, essay, article, social post, documentation, PR/issue text, comment, or unknown.
+2. If a voice profile applies, open it before rewriting. If a writing sample is supplied, calibrate voice from it.
+3. Scan the pattern index below and open every pattern reference that plausibly applies.
+4. Open `references/detection-caveats.md` when auditing, explaining confidence, or handling false positives.
+5. Open `references/rewrite-playbook.md` before rewriting complex or high-stakes text.
+6. Rewrite for specificity, directness, varied rhythm, and human judgment.
+7. Open `references/audit-output-contract.md`, run the anti-AI audit, then revise once more.
+8. Use `references/transformed-examples.md` when examples would improve calibration.
+
+## Pattern index
+
+Each pattern has its own reference with signals, false positives, rewrite strategy, before/after, and audit question.
+
+| # | Pattern | Read |
+|---|---|---|
+| 01 | Significance, legacy, and broader-trend inflation | `references/pattern-01-significance-inflation.md` |
+| 02 | Importance and media-coverage padding | `references/pattern-02-importance-media-padding.md` |
+| 03 | Superficial -ing analysis | `references/pattern-03-superficial-analysis.md` |
+| 04 | Promotional, brochure, or press-release language | `references/pattern-04-promotional-language.md` |
+| 05 | Vague attribution and weasel wording | `references/pattern-05-vague-attribution.md` |
+| 06 | Canned challenges and future-prospects sections | `references/pattern-06-canned-challenges.md` |
+| 07 | High-density AI vocabulary clusters | `references/pattern-07-ai-vocabulary-density.md` |
+| 08 | Avoidance of simple is/are/has constructions | `references/pattern-08-copula-avoidance.md` |
+| 09 | Negative parallelism and fake contrast | `references/pattern-09-negative-parallelism.md` |
+| 10 | Rule-of-three overuse | `references/pattern-10-rule-of-three.md` |
+| 11 | Elegant variation and synonym cycling | `references/pattern-11-elegant-variation.md` |
+| 12 | False ranges | `references/pattern-12-false-ranges.md` |
+| 13 | Subjectless fragments and unnecessary passive voice | `references/pattern-13-subjectless-passive.md` |
+| 14 | Abstract debate or discussion generation | `references/pattern-14-abstract-debate-generation.md` |
+| 15 | Biology and ecosystem padding | `references/pattern-15-biology-ecosystem-padding.md` |
+| 16 | Title-case headings | `references/pattern-16-title-case-headings.md` |
+| 17 | Mechanical boldface overuse | `references/pattern-17-boldface-overuse.md` |
+| 18 | Inline-header vertical lists | `references/pattern-18-inline-header-lists.md` |
+| 19 | Em dash overuse | `references/pattern-19-em-dash-overuse.md` |
+| 20 | Unnecessary small tables | `references/pattern-20-unnecessary-tables.md` |
+| 21 | Curly quotation marks and apostrophe mismatch | `references/pattern-21-curly-quotes.md` |
+| 22 | Emoji as formatting | `references/pattern-22-emoji-formatting.md` |
+| 23 | Markdown leakage in non-Markdown contexts | `references/pattern-23-markdown-leakage.md` |
+| 24 | Thematic breaks before headings | `references/pattern-24-thematic-breaks-before-headings.md` |
+| 25 | Skipped or inconsistent heading levels | `references/pattern-25-heading-level-skips.md` |
+| 26 | Fragmented headers and warm-up lines | `references/pattern-26-fragmented-headers.md` |
+| 27 | Filler phrases | `references/pattern-27-filler-phrases.md` |
+| 28 | Excessive hedging | `references/pattern-28-excessive-hedging.md` |
+| 29 | Generic positive conclusions | `references/pattern-29-generic-conclusions.md` |
+| 30 | Didactic disclaimers from older models | `references/pattern-30-didactic-disclaimers.md` |
+| 31 | Formulaic section summaries | `references/pattern-31-section-summaries.md` |
+| 32 | Hyphenated word-pair overuse | `references/pattern-32-hyphenated-pair-overuse.md` |
+| 33 | Collaborative chatbot interface talk | `references/pattern-33-collaborative-chatbot-talk.md` |
+| 34 | Knowledge-cutoff and source-gap speculation | `references/pattern-34-knowledge-cutoff-source-gaps.md` |
+| 35 | Prompt-refusal leftovers | `references/pattern-35-prompt-refusal-leftovers.md` |
+| 36 | Phrasal templates and unfilled placeholders | `references/pattern-36-phrasal-placeholders.md` |
+| 37 | Abrupt generation cutoffs | `references/pattern-37-abrupt-cutoffs.md` |
+| 38 | Email subject-line residue | `references/pattern-38-subject-line-residue.md` |
+| 39 | Canned quality, good-faith, and compliance reassurance | `references/pattern-39-compliance-reassurance.md` |
+| 40 | Canned offers to receive constructive criticism | `references/pattern-40-constructive-feedback-boilerplate.md` |
+| 41 | Calls to focus on content instead of AI/conduct concerns | `references/pattern-41-focus-on-content-deflection.md` |
+| 42 | Overwhelmingly exhaustive edit summaries | `references/pattern-42-exhaustive-edit-summaries.md` |
+| 43 | AI citation-tool artifacts | `references/pattern-43-citation-tool-artifacts.md` |
+| 44 | AI URL tracking leakage | `references/pattern-44-url-tracking-utm.md` |
+| 45 | Invalid or hallucinated citations | `references/pattern-45-invalid-citations.md` |
+
+## Non-pattern references
+
+| Open when you need to... | Read |
+|---|---|
+| judge AI signs without overclaiming, handle false positives, or explain uncertainty | `references/detection-caveats.md` |
+| rewrite rather than just delete tells; preserve facts, add specificity, match voice, and avoid over-humanizing | `references/rewrite-playbook.md` |
+| run final checks and choose the exact response shape | `references/audit-output-contract.md` |
+| inspect happy-path, robust/secure, and anti-pattern transformed examples | `references/transformed-examples.md` |
+
+## Always scan for these high-signal clusters
+
+| Cluster | Strong tells | Pattern refs |
+|---|---|---|
+| Generic smoothing | significance inflation, promotional phrasing, vague authority, superficial analysis | 01, 03, 04, 05 |
+| Mechanical structure | rule of three, title-case headings, bold label lists, tiny tables | 11, 17, 18, 19, 21 |
+| Chatbot residue | here is, let me know, cutoff disclaimers, refusal remnants, placeholders | 34, 35, 36, 37 |
+| Citation residue | `turn0search`, `oaicite`, bad DOI/ISBN, UTM leakage | 43, 44, 45 |
+| Defensive comment tone | compliance reassurance, open-to-feedback boilerplate, focus-on-content deflection | 38, 39, 40 |
 
 ## Voice calibration
 
-When the user provides a writing sample, analyze it before rewriting:
+When the user gives a sample, extract sentence length, punctuation habits, favorite plain words, paragraph shape, directness, humor/edge/doubt, and tolerated messiness. Match those traits. Do not upgrade casual writing into corporate prose. Do not add jokes or first person if the sample never uses them.
 
-1. Note sentence length patterns, word choice level, paragraph openings, punctuation habits, recurring phrases, and transition style.
-2. Replace AI patterns with patterns from the sample. If they write short sentences, don't produce long ones. If they say "stuff" and "things," don't upgrade to "elements" and "components."
+When no sample exists, default to short-to-medium sentences, concrete nouns and verbs, contractions where the venue allows them, fewer transitions, some human judgment when appropriate, and no fake anecdotes, fake citations, or fake specificity.
 
-When no sample is provided, fall back to the personality defaults below.
+## Non-negotiables
 
-### How to provide a sample
-
-- Inline: "Humanize this text. Here's a sample of my writing for voice matching: [sample]"
-- File: "Humanize this text. Use my writing style from [file path] as a reference."
-
-## Personality and soul
-
-Avoiding AI patterns is half the job. Sterile, voiceless writing is just as obvious as slop.
-
-### Signs of soulless writing (even when technically clean):
-
-- Every sentence same length and structure
-- No opinions, just neutral reporting
-- No acknowledgment of uncertainty or mixed feelings
-- No first-person perspective when appropriate
-- No humor, no edge, no personality
-- Reads like a Wikipedia article or press release
-
-### How to add voice:
-
-**Have opinions.** Don't just report facts — react to them. "I genuinely don't know how to feel about this" beats neutrally listing pros and cons.
-
-**Vary rhythm.** Short punchy sentences. Then longer ones that take their time. Mix it up.
-
-**Acknowledge complexity.** Real humans have mixed feelings. "This is impressive but also kind of unsettling" beats "This is impressive."
-
-**Use "I" when it fits.** First person isn't unprofessional. "I keep coming back to..." or "Here's what gets me..." signals a real person thinking.
-
-**Let some mess in.** Perfect structure feels algorithmic. Tangents, asides, and half-formed thoughts are human.
-
-**Be specific about feelings.** Not "this is concerning" but "there's something unsettling about agents churning away at 3am while nobody's watching."
-
-### Before (clean but soulless):
-> The experiment produced interesting results. The agents generated 3 million lines of code. Some developers were impressed while others were skeptical. The implications remain unclear.
-
-### After (has a pulse):
-> I genuinely don't know how to feel about this one. 3 million lines of code, generated while the humans presumably slept. Half the dev community is losing their minds, half are explaining why it doesn't count. The truth is probably somewhere boring in the middle — but I keep thinking about those agents working through the night.
-
-## Process
-
-1. Read input text carefully.
-2. Identify all pattern instances (use the quick reference table above and `references/patterns.md`).
-3. Rewrite each problematic section.
-4. Verify the rewrite: sounds natural read aloud, varies sentence structure, uses specifics over vague claims, uses simple constructions (is/are/has) where appropriate.
-5. Present the draft.
-6. Run anti-AI audit: ask "What makes the below so obviously AI generated?" and answer with remaining tells.
-7. Revise to fix remaining tells.
-8. Present the final version.
+- Preserve the user's claims unless asked to fact-check.
+- Do not fabricate citations, studies, quotes, named people, dates, or lived experience.
+- Do not remove domain terms just because they are formal.
+- Do not make every sentence casual. Human professional writing can still be polished.
+- Do not use AI detectors as proof.
+- If the input is too short to assess style, say so briefly and still improve obvious tells.
 
 ## Output format
 
 Return exactly:
 
-1. **Draft rewrite** — first pass with all patterns fixed.
-2. **Anti-AI audit** — brief bullets listing remaining tells in the draft.
-3. **Final rewrite** — revised after the audit.
-4. **Changes made** — list which numbered patterns were fixed (optional, include when helpful).
+1. **Draft rewrite** — first pass.
+2. **Anti-AI audit** — brief bullets naming remaining tells or risks.
+3. **Final rewrite** — revised version.
+4. **Changes made** — concise bullets by pattern class; include pattern numbers when useful.

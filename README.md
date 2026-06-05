@@ -32,7 +32,7 @@ A collection of agent skills that extend capabilities across development, review
 
 ## Writing & Editing
 
-- **humanizer** — Remove signs of AI-generated writing from text. Detects and rewrites 31 AI writing patterns to make prose sound natural and human.
+- **humanizer** — Rewrite AI-sounding prose so it reads naturally. Covers ChatGPT/LLM tells, formatting and citation artifacts, broad AI-writing signs, and one detailed reference per pattern.
 
   ```
   npx skills@latest add sndrgrdn/skills/humanizer
