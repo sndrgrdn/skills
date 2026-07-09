@@ -1,6 +1,6 @@
 # Review Examples
 
-Curated real examples from Tjalling's code reviews, organized by category. Use these to calibrate tone, depth, and specificity.
+Curated real examples from senior Booqable code reviews, organized by category. Use these to calibrate tone, depth, and specificity.
 
 ## Consistency Enforcement
 
