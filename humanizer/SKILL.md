@@ -1,40 +1,35 @@
 ---
 name: humanizer
-version: 5.1.0
-description: |
-  Rewrite AI-sounding prose so it reads like a real person wrote it. Use when
-  asked to humanize text, make writing sound natural, remove ChatGPT/LLM tells,
-  de-slop prose, de-AI a document, make text less robotic, or audit writing for
-  signs of AI generation. Covers one-reference-per-pattern guidance for phrasing,
-  structure, formatting artifacts, citations/markup leakage, and canned chatbot
-  correspondence.
-license: MIT
+description: Rewrite AI-sounding text into natural human prose. Use when asked to humanize, de-AI, remove tells, make text sound human, or clean up LLM output for publication.
 ---
 
 # Humanizer
 
-Rewrite AI-sounding text into natural human prose without laundering facts, flattening voice, or merely hiding surface tells.
+Find **tells** — AI-generated patterns that signal machine authorship — and rewrite them into natural prose. Preserve meaning, restore specificity, match venue.
 
-## Operating rule
+## Workflow
 
-Do not treat AI signs as a guilty verdict. Treat them as rewrite targets. Preserve meaning, remove generic smoothing, restore specificity, and keep the output appropriate to the user's venue.
+1. Identify target venue (email, essay, article, PR, documentation, comment, social post).
+2. Scan the cluster table and pattern index. Open every pattern reference that plausibly matches the input. Completion: every cluster checked, references opened for each match.
+3. Open `references/rewrite-playbook.md`. Rewrite for specificity, directness, and varied rhythm.
+4. Open `references/audit-output-contract.md`. Run the anti-AI audit, then revise. Completion: no unaddressed tells in the audit.
+5. If input is too short to assess style, say so and still fix obvious tells.
 
-## Voice matching
+Default voice: short-to-medium sentences, concrete nouns and verbs, contractions where venue allows, fewer transitions. Do not fabricate citations, quotes, named people, or lived experience.
 
-## Runtime workflow
+## High-signal clusters
 
-1. Identify the target venue: email, essay, article, social post, documentation, PR/issue text, comment, or unknown.
-2. If a voice profile applies, open it before rewriting. If a writing sample is supplied, calibrate voice from it.
-3. Scan the pattern index below and open every pattern reference that plausibly applies.
-4. Open `references/detection-caveats.md` when auditing, explaining confidence, or handling false positives.
-5. Open `references/rewrite-playbook.md` before rewriting complex or high-stakes text.
-6. Rewrite for specificity, directness, varied rhythm, and human judgment.
-7. Open `references/audit-output-contract.md`, run the anti-AI audit, then revise once more.
-8. Use `references/transformed-examples.md` when examples would improve calibration.
+| Cluster | Tells | Pattern refs |
+|---|---|---|
+| Generic smoothing | significance inflation, promotional phrasing, vague authority, superficial analysis | 01, 03, 04, 05 |
+| Mechanical structure | rule of three, title-case headings, bold label lists, tiny tables | 10, 16, 17, 18, 20 |
+| Chatbot residue | "here is", "let me know", cutoff disclaimers, refusal remnants, placeholders | 33, 34, 35, 36, 37 |
+| Citation residue | `turn0search`, `oaicite`, bad DOI/ISBN, UTM leakage | 43, 44, 45 |
+| Defensive tone | compliance reassurance, open-to-feedback boilerplate, focus-on-content deflection | 39, 40, 41 |
 
 ## Pattern index
 
-Each pattern has its own reference with signals, false positives, rewrite strategy, before/after, and audit question.
+Each pattern has its own reference with signals, false positives, rewrite strategy, and before/after.
 
 | # | Pattern | Read |
 |---|---|---|
@@ -86,43 +81,16 @@ Each pattern has its own reference with signals, false positives, rewrite strate
 
 ## Non-pattern references
 
-| Open when you need to... | Read |
+| Open when... | Read |
 |---|---|
-| judge AI signs without overclaiming, handle false positives, or explain uncertainty | `references/detection-caveats.md` |
-| rewrite rather than just delete tells; preserve facts, add specificity, match voice, and avoid over-humanizing | `references/rewrite-playbook.md` |
-| run final checks and choose the exact response shape | `references/audit-output-contract.md` |
-| inspect happy-path, robust/secure, and anti-pattern transformed examples | `references/transformed-examples.md` |
+| Judging confidence, handling false positives, or explaining uncertainty | `references/detection-caveats.md` |
+| Rewriting complex or high-stakes text | `references/rewrite-playbook.md` |
+| Running final checks and choosing response shape | `references/audit-output-contract.md` |
+| Inspecting before/after examples for calibration | `references/transformed-examples.md` |
 
-## Always scan for these high-signal clusters
+## Output
 
-| Cluster | Strong tells | Pattern refs |
-|---|---|---|
-| Generic smoothing | significance inflation, promotional phrasing, vague authority, superficial analysis | 01, 03, 04, 05 |
-| Mechanical structure | rule of three, title-case headings, bold label lists, tiny tables | 11, 17, 18, 19, 21 |
-| Chatbot residue | here is, let me know, cutoff disclaimers, refusal remnants, placeholders | 34, 35, 36, 37 |
-| Citation residue | `turn0search`, `oaicite`, bad DOI/ISBN, UTM leakage | 43, 44, 45 |
-| Defensive comment tone | compliance reassurance, open-to-feedback boilerplate, focus-on-content deflection | 38, 39, 40 |
-
-## Voice calibration
-
-When the user gives a sample, extract sentence length, punctuation habits, favorite plain words, paragraph shape, directness, humor/edge/doubt, and tolerated messiness. Match those traits. Do not upgrade casual writing into corporate prose. Do not add jokes or first person if the sample never uses them.
-
-When no sample exists, default to short-to-medium sentences, concrete nouns and verbs, contractions where the venue allows them, fewer transitions, some human judgment when appropriate, and no fake anecdotes, fake citations, or fake specificity.
-
-## Non-negotiables
-
-- Preserve the user's claims unless asked to fact-check.
-- Do not fabricate citations, studies, quotes, named people, dates, or lived experience.
-- Do not remove domain terms just because they are formal.
-- Do not make every sentence casual. Human professional writing can still be polished.
-- Do not use AI detectors as proof.
-- If the input is too short to assess style, say so briefly and still improve obvious tells.
-
-## Output format
-
-Return exactly:
-
-1. **Draft rewrite** — first pass.
-2. **Anti-AI audit** — brief bullets naming remaining tells or risks.
-3. **Final rewrite** — revised version.
-4. **Changes made** — concise bullets by pattern class; include pattern numbers when useful.
+1. **Draft rewrite**
+2. **Anti-AI audit** — remaining tells or risks
+3. **Final rewrite**
+4. **Changes made** — by pattern class, with pattern numbers

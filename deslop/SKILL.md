@@ -1,160 +1,101 @@
 ---
 name: deslop
-description: Review recently written code for over-engineering, paranoia, defensive chaff, and LLM-generated slop. Use when asked to deslop, trim chaff, trim the fat, cut cruft, remove paranoia, check for over-engineering, simplify recent work, or do a critical review before PR. Scans a diff, checks context for intent, proposes numbered cuts, and applies only explicitly approved changes.
+description: Scan a recent diff for slop — unnecessary complexity, defensive chaff, premature abstraction, LLM-generated filler. Use when asked to deslop, trim chaff, cut cruft, simplify, or review before PR.
 ---
 
 # Deslop
 
-Review only recently written code that is in scope and understood. Find unnecessary complexity, defensive chaff, premature abstraction, and AI-generated filler. Keep behavior, local idioms, and useful safeguards.
-
 Core question: **is this code more complex than it needs to be?**
 
-Do not turn deslop into general refactoring, redesign, style review, or bug fixing.
-
-## Use When
-
-- after implementing a feature, before push or PR
-- after a cross-cutting change where extra scaffolding may have crept in
-- when review feedback says code looks over-engineered
-- when the user asks to deslop, trim chaff, cut cruft, remove paranoia, or simplify recent work
-
-## Do Not Use When
-
-- no diff or recent scope is available
-- tests are failing for a real behavior bug; fix the signal first
-- code is vendored, generated, or unfamiliar
-- the task is already a pure refactor
-- the requested change would require redesign outside the recent diff
+Scope: recently written code you understand. Not refactoring, not redesign, not bug fixing.
 
 ## Workflow
 
-| Step | Action | Rule |
-|------|--------|------|
-| 1 | Find scope | State exact diff/range before scanning |
-| 2 | Check fences | Check enough context to avoid cutting intent |
-| 3 | Scan catalogs | Record candidates only; do not edit |
-| 4 | Propose cuts | Numbered findings with verdict and context result |
-| 5 | Wait for approval | Apply only explicit user picks |
-| 6 | Edit and verify | Targeted cuts, syntax/lint/test when feasible |
+### 1. Find scope
 
-### Step 1: Find Scope
+Probe order unless the user specifies a range:
 
-Use this probe order unless the user specifies a range:
-
-1. `git diff --cached` — staged changes
-2. `git diff HEAD` — staged + unstaged changes
-3. `git log origin/<base>..HEAD` — branch commits
+1. `git diff --cached`
+2. `git diff HEAD`
+3. `git log origin/<base>..HEAD`
 4. user-specified path, commit, or range
 
 State scope before scanning:
 
 > review `origin/main..HEAD` — 10 commits, 39 files.
 
-Stop and ask if:
+Stop and ask if the diff is empty, over 100 files, or ownership is unclear.
 
-- the diff is empty
-- the diff is over 100 files; ask for path, commit range, or feature slice
-- ownership or intent is unclear enough that cuts would be guesses
+### 2. Check fences
 
-### Step 2: Check Fences Before Recommending Cuts
-
-Do not use nearby slop as proof that new slop should stay. Context is evidence, not validation.
+Chesterton's fence: understand a safeguard before cutting it. Nearby slop is not evidence that new slop should stay.
 
 Before marking a candidate **drop**, check enough context to answer:
 
-- **behavior:** does this preserve an API, framework, data, or compatibility contract?
-- **safety:** is this guard protecting a realistic failure path?
-- **consistency:** would removing it create risky inconsistency in the touched area?
+- **behavior:** preserves an API, framework, or compatibility contract?
+- **safety:** protects a realistic failure path?
+- **consistency:** would removing it create risky inconsistency?
 
-Use the lightest check that answers the question:
-
-1. Same file first.
-2. Same module/folder only if same-file context is unclear.
-3. File history only for safeguards, public API, migrations, or unclear intent.
+Lightest check first: same file → same module → file history (only for safeguards, public API, or unclear intent).
 
 | Context result | Action |
 |----------------|--------|
-| required fence | keep; explain the contract or safety reason |
-| repeated slop | still flag; note that nearby code repeats it |
-| novel slop | flag if it matches catalog slop |
-| unclear intent | mark not sure; ask or recommend keep |
+| required fence | keep — explain the contract |
+| repeated slop | flag — note repetition |
+| novel slop | flag if catalog match |
+| unclear intent | not sure — ask or keep |
 
-This is Chesterton's fence: understand a safeguard before cutting it. It is not a vote where surrounding slop wins by repetition.
-
-### Step 3: Load Catalogs and Scan
+### 3. Load catalogs and scan
 
 Always read `references/catalog.md`.
 
-Load language-specific catalogs based on diff contents:
-
-| Extension / pattern | Read |
-|---------------------|------|
+| Diff contents | Also read |
+|---------------|-----------|
 | `.rb`, `.rake`, `.erb`, `Gemfile`, `app/`, `config/`, `db/` | `references/catalog-ruby.md` |
 | `.js`, `.jsx`, `.ts`, `.tsx`, `.mjs`, `.cjs`, `package.json` | `references/catalog-javascript.md` |
-| other languages | use `references/catalog.md`; flag only high-confidence generic hits |
 
-For each candidate, record:
+For each candidate, record: file:line, snippet, one-sentence reason, verdict (**drop** / **keep** / **not sure**), context result. Do not edit.
 
-- file path + line
-- snippet
-- one-sentence reason
-- verdict: **drop**, **keep**, or **not sure**
-- context result: **required fence**, **repeated slop**, **novel slop**, or **unclear intent**
+### 4. Propose findings
 
-Do not edit during scanning.
-
-### Step 4: Propose Findings
-
-Use this format:
-
-````markdown
+```markdown
 review `<scope>` — <N> files.
 
-Found <N> candidates:
+### 1. <label>
 
-### 1. <short label>
+`file:line`
 
-```<lang>
+```lang
 <snippet>
 ```
 
-file:line
-
-<why this may be slop. Note behavior/safety tradeoff if any.>
+<why this is slop. note tradeoff if any.>
 
 **verdict:** drop | keep | not sure — <reason>
 **context:** required fence | repeated slop | novel slop | unclear intent — <evidence>
-````
 
-End with:
+---
 
-```markdown
-Recommended bundle: apply <numbers>, skip <numbers>. Estimated net change: ~<lines> lines.
+Recommended bundle: apply <numbers>, skip <numbers>. Net: ~<lines> lines.
 ```
 
-If no good cuts exist, say so directly and list only important keep decisions.
+No good cuts? Say so. List only important keep decisions.
 
-### Step 5: Require Explicit Approval
+### 5. Wait for approval
 
-Apply changes only when the user names a subset, says `all`, or says `recommended bundle` / `your pick`.
+Apply only when the user names specific numbers, says `all`, or says `recommended bundle`.
 
-Ambiguous approval such as "looks good" is not enough. Ask:
+Ambiguous ("looks good") → ask: *apply all or recommended bundle?*
 
-> apply all findings or only the recommended bundle?
+### 6. Apply and verify
 
-### Step 6: Apply and Verify
+Targeted edits for approved items only.
 
-Make targeted edits only for approved items.
+Completion: every approved cut applied, syntax/typecheck/lint passes (or skip reason stated), focused tests green if they exist, no unrelated changes introduced.
 
-After edits:
+Commit only if asked:
 
-1. run syntax/typecheck/lint for changed files when available
-2. run focused tests if affected code has tests
-3. report unrelated failures separately with exact command and shortest relevant error
-
-Commit only if the user asked for a commit. If committing, use one scoped commit:
-
-```text
+```
 <area>: deslop <what>
 
 - drop redundant boolean coercion in foo
@@ -162,34 +103,8 @@ Commit only if the user asked for a commit. If committing, use one scoped commit
 - inline one-use wrapper in baz
 ```
 
-## Anti-Patterns
-
-| Do not | Why |
-|--------|-----|
-| edit during scan | user must approve cuts first |
-| skip fence check before drops | risks removing an intentional contract or useful safeguard |
-| widen into redesign | deslop is narrow recent-diff cleanup |
-| apply from ambiguous approval | user intent is unclear |
-| mark everything as drop | honest uncertainty prevents bad cuts |
-| invent findings outside catalogs | taste is not evidence |
-| deslop unfamiliar code | guesses break useful fences |
-| mix bug fixes with deslop | fix behavior first, simplify second |
-
-## Checklist
-
-Before reporting done:
-
-- [ ] scope stated
-- [ ] relevant catalogs loaded
-- [ ] fence check performed before each drop verdict
-- [ ] every finding cites file:line + snippet
-- [ ] every finding has verdict + context result
-- [ ] user explicitly approved applied cuts
-- [ ] syntax/lint/test run or skipped with reason
-- [ ] no unrelated redesign or style-only changes included
-
 ## References
 
 - `references/catalog.md` — generic slop categories
-- `references/catalog-ruby.md` — Ruby/Rails-specific slop
-- `references/catalog-javascript.md` — JS/TS/React-specific slop
+- `references/catalog-ruby.md` — Ruby/Rails slop
+- `references/catalog-javascript.md` — JS/TS/React slop
