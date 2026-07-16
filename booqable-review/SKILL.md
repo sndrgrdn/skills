@@ -1,6 +1,7 @@
 ---
 name: booqable-review
 description: Review Booqable code changes — PRs, branches, diffs — for pattern consistency, architectural fit, test quality, business-logic completeness, and performance. Use when asked to review code or check a PR against Booqable conventions.
+disable-model-invocation: true
 ---
 
 # Booqable Code Review

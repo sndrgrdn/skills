@@ -1,6 +1,7 @@
 ---
 name: humanizer
 description: Rewrite AI-sounding text into natural human prose. Use when asked to humanize, de-AI, remove tells, make text sound human, or clean up LLM output for publication.
+disable-model-invocation: true
 ---
 
 # Humanizer

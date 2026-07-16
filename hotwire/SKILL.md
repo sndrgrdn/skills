@@ -7,6 +7,7 @@ description: >-
   broadcasting, morphing, progressive enhancement, and testing. Use for any task involving
   turbo_frame_tag, turbo_stream, data-controller, data-action, Turbo Drive navigation,
   ActionCable broadcasts, broadcast_refreshes, Hotwire architecture decisions, or Turbo Native.
+disable-model-invocation: true
 ---
 
 # Hotwire

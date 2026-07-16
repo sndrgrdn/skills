@@ -1,6 +1,7 @@
 ---
 name: test-design-review
 description: Review tests for design quality using test design guidelines.
+disable-model-invocation: true
 ---
 
 # Test Design Review
