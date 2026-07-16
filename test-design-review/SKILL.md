@@ -347,15 +347,15 @@ Good:
 describe "unsubscribe from notification emails", type: :request do
   let!(:test_suite_run) { create(:test_suite_run, cached_status: "Passed") }
   let!(:repository) { test_suite_run.repository }
-                                                                                                                                             
+
   before do
     allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
-    login_as(repository.user)                                        
+    login_as(repository.user)
     TestSuiteRunResultNotification.send_notifications
-  end                                                                                                                                        
-                                 
-  it "disables notification emails for the repository" do                                                                                    
-    email_body = SentEmail.last.body         
+  end
+
+  it "disables notification emails for the repository" do
+    email_body = SentEmail.last.body
     unsubscribe_path = email_body[/href="([^"]*unsubscribe[^"]*)"/, 1]
 
     get unsubscribe_path
@@ -391,22 +391,22 @@ me the essence of the test.
 
 Good:
 ```ruby
-context "when called twice" do                                                                                                               
-  it "queries the database only once" do                                                                                                     
-    dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)                                      
-                                                                                                                                             
-    first_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }                                                  
-    second_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }                                                 
-                                                                                                                                               
-    expect(second_call_count).to eq(0)                                                                                                       
-  end                                                                                                                                        
-                                                                                                                                               
-  def count_queries(&block)                                                                                                                  
-    count = 0                                                                                                                                
-    callback = lambda { |*, _| count += 1 }                                                                                                  
-    ActiveSupport::Notifications.subscribed(callback, "sql.active_record", &block)                                                           
-    count                                                                                                                                    
-  end                                                                                                                                        
+context "when called twice" do
+  it "queries the database only once" do
+    dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
+
+    first_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
+    second_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
+
+    expect(second_call_count).to eq(0)
+  end
+
+  def count_queries(&block)
+    count = 0
+    callback = lambda { |*, _| count += 1 }
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record", &block)
+    count
+  end
 end
 ```
 
@@ -475,9 +475,9 @@ end
 
 Bad:
 ```ruby
-def unsubscribe_path_from(sent_email)                                                                                       
-  url = sent_email.body[/href="([^"]*notification_email_subscription[^"]*)"/, 1]                                            
-  URI.parse(url).path                                                                                                       
+def unsubscribe_path_from(sent_email)
+  url = sent_email.body[/href="([^"]*notification_email_subscription[^"]*)"/, 1]
+  URI.parse(url).path
 end
 ```
 
@@ -598,6 +598,78 @@ context "when filtered by github account" do
     expect(response.body).to include(selected_job_run.id)
     expect(response.body).not_to include(other_job_run.id)
   end
+end
+```
+
+## Favor Concrete Examples Over Abstractions
+
+Bad:
+```ruby
+describe "#matches?" do
+  context "when the root job run's status is one of the filter's statuses" do
+    let!(:failed_job_run) { create(:job_run) }
+    let!(:failed_task) { create(:task, :failed, job_run: failed_job_run) }
+
+    it "is a match" do
+      job_run_tree = JobRunTree.new(failed_job_run)
+      filter_criteria = JobRunListFilterCriteria.new(branch_name: nil, statuses: ["Failed"])
+
+      expect(job_run_tree.matches?(filter_criteria)).to eq(true)
+    end
+  end
+end
+```
+
+Good:
+```ruby
+describe "#matches?" do
+  context "when filtering for failed job runs" do
+    let!(:filter_criteria) { JobRunListFilterCriteria.new(branch_name: nil, statuses: ["Failed"]) }
+
+    context "and the root job run failed" do
+      let!(:root_job_run) { create(:job_run) }
+      let!(:failed_task) { create(:task, :failed, job_run: root_job_run) }
+
+      it "matches the tree" do
+        expect(JobRunTree.new(root_job_run).matches?(filter_criteria)).to eq(true)
+      end
+    end
+
+    context "and the root job run passed" do
+      let!(:root_job_run) { create(:job_run) }
+      let!(:passed_task) { create(:task, :passed, job_run: root_job_run) }
+
+      it "does not match the tree" do
+        expect(JobRunTree.new(root_job_run).matches?(filter_criteria)).to eq(false)
+      end
+    end
+  end
+end
+```
+
+## Tests Should Not Be Programs
+
+Tests should be flat and static. The following is an example of how a test
+should NOT be.
+
+```ruby
+it 'treats a timed-out job run as finished' do
+  timed_out_response = double(body: '{"status": "Timed Out"}')
+  client = double
+  poll_count = 0
+  allow(client).to receive(:get) do
+    poll_count += 1
+    raise 'polled again after a terminal status' if poll_count > 1
+
+    timed_out_response
+  end
+
+  job_run = SaturnCI::JobRun.new(id: 'abc123', client: client)
+  allow(job_run).to receive(:sleep)
+
+  job_run.wait_for_completion
+
+  expect(job_run.status).to eq('Timed Out')
 end
 ```
 

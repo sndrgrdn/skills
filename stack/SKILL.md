@@ -116,4 +116,3 @@ GitHub uses `#123`; GitLab uses `!123 - Title`.
   repair before running `stack sync --apply` again.
 - If output is unclear, inspect with `stack status`, `stack history`, or command
   help before applying.
-
