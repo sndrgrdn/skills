@@ -1,5 +1,0 @@
-interface:
-  display_name: "Prompt Craft"
-  short_description: "Principles for predictable agent instructions"
-policy:
-  allow_implicit_invocation: false

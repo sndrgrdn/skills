@@ -1,6 +1,6 @@
-# Glossary — Writing Agent Instructions
+# Glossary — Writing for Agents
 
-The domain model for what makes agent-facing instructions great — system prompts, rules files, AGENTS.md, skill bodies. Instructions exist to wrangle determinism out of a stochastic system; the root virtue is **Predictability**, and every term below is a lever on it. This is the disclosed reference for [`writing-agent-instructions`](SKILL.md).
+The domain model for what makes documents consumed by agents predictable — system prompts, rules files, `AGENTS.md`, skill bodies, and documents reached through pointers. These documents exist to wrangle determinism out of a stochastic system; the root virtue is **Predictability**, and every term below is a lever on it. This is the disclosed reference for [`writing-for-agents`](SKILL.md).
 
 The terms are grouped by axis: **Loading** (how material reaches the context window), **Information Hierarchy** (how content is arranged), **Steering** (how the agent's runtime behaviour is shaped), and **Pruning** (how instructions are kept lean). Each **failure mode** lives beside the lever that cures it, tagged _failure mode_.
 
@@ -27,6 +27,12 @@ _Avoid_: link, reference, import
 The cost material imposes by sitting in the agent's context window every turn — spending both tokens and attention. A system prompt or rules file is pure context load; a model-invoked skill pays it through its always-loaded description; on-demand material behind a **context pointer** escapes it until the pointer fires. The brake on inlining more, and the reason always-loaded surfaces earn the hardest pruning.
 
 _Avoid_: token cost, context bloat
+
+### Cognitive Load
+
+The cost to the human of remembering which instruction documents exist and when to reach for each. Material with no **context pointer** avoids **context load**, but the human becomes the index responsible for finding it. Cognitive load is the price of human agency, not a cost to eliminate: spend it where human judgement should decide what loads, and remove it where the agent should discover material itself.
+
+_Avoid_: discoverability cost, memory burden
 
 ## Information Hierarchy
 

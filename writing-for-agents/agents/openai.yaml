@@ -1,0 +1,5 @@
+interface:
+  display_name: "Writing for Agents"
+  short_description: "Principles for predictable agent-facing documents"
+policy:
+  allow_implicit_invocation: false
