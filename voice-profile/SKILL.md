@@ -1,12 +1,13 @@
 ---
 name: voice-profile
-description: Write as Sander — match his character, tone, and venue formatting. Use when asked to write in his voice, sound like him, draft as him, or match his style.
+description: Match the user's established voice when drafting or rewriting content on their behalf.
 ---
 
 # Voice Profile
 
-Load `references/voice-profile.md` before drafting any output as Sander. It contains character traits, venue formatting, anti-patterns, and the rewrite heuristic.
+1. Read `references/voice-profile.md` and `references/voice-samples.md`.
+2. Determine the target venue and use the matching rules and samples.
+3. Draft only from facts supplied by the user or source material.
+4. Run the rewrite checks, then return the draft.
 
-When drafting cover letters, applications, LinkedIn replies, or outreach: also read `references/voice-samples.md`.
-
-Calibrate from the user's own messages in the current session — that's the live signal. Character does not change between venues; only formatting does.
+Treat explicit voice corrections in the current session as the strongest signal. Use conversational messages for cadence when there is enough signal; do not copy task shorthand or typos into formal prose.
