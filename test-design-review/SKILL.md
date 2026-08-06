@@ -6,267 +6,67 @@ disable-model-invocation: true
 
 # Test Design Review
 
-Review the specified tests against every applicable guideline in this document. When the caller specifies a diff instead, include both test and application code needed to understand the tests.
+Review the specified tests against every rule below. When the caller supplies a diff instead of files, also read the application code it exercises so each rule can be judged.
 
 ## Process
 
-1. Pin the review scope. Prefer the files, diff, revisions, or pull request named by the caller. When none is supplied, use the merge base of `HEAD` and the repository's upstream default branch. Ask for a target when that default cannot be resolved. Done when the exact files or revision range are known.
-2. Assess every guideline section from **Core Principle** through **Miscellaneous**, including nested sections and each distinct rule within a section. Keep a ledger marking each one as *finding*, *clear*, or *inapplicable*. Done when every guideline has one of those states.
-3. Record each material violation with its location, the behavior or design risk, and a specific remedy. Combine violations only when they share one cause and remedy. Rank findings by severity.
-4. Report the ranked findings. Include the ledger when asked; otherwise mention any guideline that could not be assessed. When the caller requested fixes, apply them after reporting and verify the affected tests. Otherwise, stop after the review.
+1. **Pin the scope.** Take the files, diff, revisions, or pull request the caller named. When none is named, ask for a target — never infer one from a branch or a default ref.
+2. **Assess every rule.** Work through Specification, Ends, not means, Essence, Abstraction level, Tests are not programs, and Determinism, including every distinct rule inside each. Keep a ledger marking every rule `finding`, `clear`, or `not applicable`. Done when every rule carries one of those states.
+3. **Record findings.** Each material violation gets its location, the behavior or design risk it hides, and a specific remedy. Combine findings only when they share one cause and one remedy. Rank by severity.
+4. **Report.** Always publish the ledger — no rule goes unmentioned — and list findings *location → risk → remedy*, most severe first. If the caller asked for fixes, apply them and re-run the affected tests. Otherwise stop after the report.
 
 ## Core Principle
 
-Tests are executable specifications. A specification answers: "In scenario X, what should happen?"
+A test is an executable specification. It answers exactly one question: "In scenario X, what should happen?" Every rule below is a way of honoring that question.
 
-## Specification Format
+## Specification
 
-Good: "When the user submits an empty form, display a validation error."
-Good: "When the API returns 500, show a graceful error message."
-Good: "When no records exist, display 'No results found'."
-
-Bad: "It works correctly." (What does 'correctly' mean?)
-Bad: "It handles errors." (Which errors? How?)
-Bad: "It validates input." (What validation? What happens on failure?)
-
-## Test Behavior, Not Implementation Details
-
-Bad:
-```rust
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    mod tick {
-        use super::*;
-
-        #[test]
-        fn marks_the_particles_position_blue() {
-            let mut world = World::new(10, 10);
-
-            world.tick();
-
-            assert_eq!(world.color_at(5, 0), 0x0000FF);
-        }
-    }
-}
-```
-
-  Good:
-```rust
-mod when_a_particle_touches_a_grid_cell {
-    use super::*;
-
-    #[test]
-    fn the_cell_turns_the_particles_color() {
-        let mut world = World::new(10, 10);
-        let particle_color = world.particle_color();
-        let particle_position = world.particle_position();
-
-        world.tick();
-
-        assert_eq!(
-            world.color_at(particle_position.0, particle_position.1),
-            particle_color
-        );
-    }
-}
-```
-
-## When Capturing Scenarios, Describe the Essence
-
-Bad:
-```
-describe "scope=failed" do
-```
+**A test names the behavior it specifies, in "When X, then Y" form.**
 
 Good:
-```
-describe "rerunning only failed tests" do
-```
 
-## Avoid Arbitrariness
+- "When the user submits an empty form, display a validation error."
+- "When the API returns 500, show a graceful error message."
+- "When no records exist, display 'No results found'."
 
-### Avoid .first and .last in Tests
+Bad: "It works correctly." (What does 'correctly' mean?), "It handles errors." (Which? How?), "It validates input." (What validation? What happens on failure?).
 
-The use of `.first` or `.last` can make a test unstable. The result depends on the record order, which can change. Use an explicit query with `change` and `where`.
+Name a scenario by its essence, not by the mechanism that triggers it.
 
-Bad:
+Bad: `describe "scope=failed"`
+
+Good: `describe "rerunning only failed tests"`
+
+## Ends, not means
+
+**Assert the outcome, never the mechanism.** A test should survive the implementation being replaced — a different class, method, flag, or cache — so long as what the user or the system observes stays the same. Mock-recording assertions (`have_received`), reads of cache store keys, and reach-ins to internals all test *means*; assert the observable *end* instead, and stub only what you must (external services), so the real code runs against the real outcome.
+
+Assert the end result, not the pose that produced it:
+
 ```ruby
-post repositories_path, params: { repo_full_name: "example-org/sample-app" }
-repository = Repository.last
-expect(repository.github_account).to eq(github_account)
-```
-
-Good:
-```ruby
-expect { post repositories_path, params: { repo_full_name: "example-org/sample-app" } }
-  .to change { Repository.where(github_account: github_account).count }.by(1)
-```
-
-## Make Assertions About What's Essential, Not What's Incidental
-
-Only assert what matters. Don't assert things that are:
-- Implied by other assertions (if checking response body, don't also check `be_successful` - if it wasn't successful, the body check would fail)
-- Implementation details rather than behavior
-- Just noise that makes the test longer without adding meaning
-
-Bad:
-```ruby
-expect(response).to be_successful  # redundant noise
-expect(response.body).not_to include("deleted_item")
-```
-
-Good:
-```ruby
-expect(response.body).not_to include("deleted_item")
-```
-
-If the response wasn't successful, the body assertion tells you something went wrong. The `be_successful` check adds nothing.
-
-## Don't Mix Levels of Abstraction
-
-Bad:
-```ruby
-describe "Rerun test suite run", type: :system do
-  # ... existing tests ...
-
-  describe "Rerun Failed button" do
-    context "when the test suite run has failed tests" do
-      let!(:test_suite_run) { create(:test_suite_run, :with_failed_run) }
-      let!(:failed_test_case_run) { create(:test_case_run, task: test_suite_run.tasks.first, status: "failed") }
-
-      before do
-        allow(ENV).to receive(:fetch).and_call_original
-        allow(ENV).to receive(:fetch).with("NOVA_K8S_API_URL").and_return("https://k8s.example.com")
-        allow(ENV).to receive(:fetch).with("NOVA_K8S_TOKEN").and_return("test-token")
-        allow(ENV).to receive(:fetch).with("NOVA_K8S_CA_CERT").and_return("test-ca-cert")
-        allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
-        login_as(test_suite_run.repository.user)
-      end
-
-      it "displays the Rerun Failed button" do
-        visit repository_test_suite_run_path(id: test_suite_run.id, repository_id: test_suite_run.repository.id)
-        expect(page).to have_button("Rerun Failed")
-      end
-    end
-  end
+it "marks the particle's position blue" do
+  world = World.new(10, 10)
+  world.tick
+  expect(world.color_at(5, 0)).to eq(0x0000FF)
 end
 ```
 
-Good:
+The test above locks in two accidents — the particle happens to sit on cell (5, 0) and stays blue. It breaks the moment either changes, though the behavior (a touched cell takes the particle's color) never did. Read the real values instead:
+
 ```ruby
-describe "Rerun Failed button", type: :system do
-  context "when the test suite run has failed tests" do
-    let!(:test_suite_run) { create(:test_suite_run, :with_task) }
-    let!(:test_case_run) { create(:test_case_run, task: test_suite_run.tasks.first, status: "failed") }
+it "turns the touched cell into the particle's color" do
+  world = World.new(10, 10)
+  particle_color = world.particle_color
+  particle_position = world.particle_position
 
-    before do
-      login_as(test_suite_run.repository.user)
-    end
+  world.tick
 
-    it "displays the Rerun Failed button" do
-      visit repository_test_suite_run_path(id: test_suite_run.id, repository_id: test_suite_run.repository.id)
-      expect(page).to have_button("Rerun Failed")
-    end
-  end
+  expect(world.color_at(particle_position[0], particle_position[1])).to eq(particle_color)
 end
 ```
 
-## Don't Write Pointless/Tautological Tests
+Assert observable behavior, not method calls:
 
-Bad:
-```ruby
-it "renders a labeled checkbox for each github account" do
-  first_github_account = create(:github_account, account_name: "first-account")
-  second_github_account = create(:github_account, account_name: "second-account")
-
-  get admin_job_runs_path
-
-  document = Nokogiri::HTML(response.body)
-  expect(labeled_checkbox_value(document, "first-account")).to eq(first_github_account.id)
-  expect(labeled_checkbox_value(document, "second-account")).to eq(second_github_account.id)
-end
-```
-
-Tests like this merely answer the question: "Is the code I wrote the code I wrote?" Answer: yup. It will never not be. There's no point in writing tests like this.
-
-## Avoid Forward Reference
-
-In the below example, `task_id` is referred to before it's "defined".
-
-Bad:
-```ruby
-describe '#docker_compose_project_name' do
-  let!(:executor) { instance_double(Executor, task_id: task_id) }
-  let!(:worker) { Worker.new(executor) }
-
-  context 'when task_id is a non-empty string' do
-    let!(:task_id) { '123' }
-
-    it 'returns "task-" followed by the task_id' do
-      expect(worker.docker_compose_project_name).to eq('task-123')
-    end
-  end
-end
-```
-
-Better to do it the other way around.
-
-Better:
-```ruby
-describe '#docker_compose_project_name' do
-  context 'when task_id is a non-empty string' do
-    let!(:task_id) { '123' }
-    let!(:executor) { instance_double(Executor, task_id: task_id) }
-    let!(:worker) { Worker.new(executor) }
-
-    it 'returns "task-" followed by the task_id' do
-      expect(worker.docker_compose_project_name).to eq('task-123')
-    end
-  end
-end
-```
-
-Even better: just hard-code it.
-```ruby
-describe '#docker_compose_project_name' do
-  context 'when task_id is a non-empty string' do
-    let!(:executor) { instance_double(Executor, task_id: '123') }
-    let!(:worker) { Worker.new(executor) }
-
-    it 'returns "task-" followed by the task_id' do
-      expect(worker.docker_compose_project_name).to eq('task-123')
-    end
-  end
-end
-```
-
-## Don't Use have_current_path
-
-`have_current_path` is the wrong level of abstraction -- it's too tightly coupled to the implementation. Instead, assert on what the user sees on the page.
-
-Bad:
-```ruby
-it "redirects to the repositories page" do
-  visit root_path
-  expect(page).to have_current_path(repositories_path)
-end
-```
-
-Good:
-```ruby
-it "redirects to the repositories page" do
-  visit root_path
-  expect(page).to have_content("Repositories")
-end
-```
-
-## Assert on Observable Outcomes, Not Method Calls
-
-When testing whether something happened (or didn't happen), assert on the observable end result rather than on whether a specific method was called. Mock-based assertions like `expect(x).to have_received(:foo)` test means (was this method called?) rather than ends (did the thing actually happen?).
-
-Bad:
 ```ruby
 it "queues the task" do
   worker_pool = instance_double(WorkerPool, queue_task: nil)
@@ -278,23 +78,17 @@ it "queues the task" do
 end
 ```
 
-Good:
+The same test, as an observable end:
+
 ```ruby
-it "queues the task" do
+it "records a queued event for the task" do
   expect { QueueUnqueuedTasksJob.new.perform }
     .to change { TaskEvent.where(name: "queued").count }.by(1)
 end
 ```
 
-The bad version tests that a specific method was called on a specific object -- pure implementation. The good version tests the observable outcome: a "queued" event was created. If the implementation changes (different class, different method name), the good test still works as long as the end result is the same.
+Performance semantics too — test the effect, not the cache's key:
 
-Stub only what you must (external services like k8s calls), and let the real code run so you can assert on real outcomes.
-
-## Test Ends, Not Means
-
-When testing performance optimizations like caching, don't assert on the caching mechanism (an implementation detail). Assert on the observable difference: fewer database queries.
-
-Bad:
 ```ruby
 it "caches the result" do
   test_suite_run.duration
@@ -302,7 +96,8 @@ it "caches the result" do
 end
 ```
 
-Good:
+The bad version reads the cache implementation; a future switch to memoization or a database column breaks it for no behavioral change. Test the observable contract — no redundant work on a second call:
+
 ```ruby
 it "does not query the database on subsequent calls" do
   test_suite_run.duration
@@ -317,145 +112,38 @@ it "does not query the database on subsequent calls" do
 end
 ```
 
-The bad version is coupled to the caching mechanism (`Rails.cache`). If you switch to memoization, a database column, or a different cache store, the test breaks even though the behavior is the same. The good version tests the essential outcome: no redundant database queries.
+Assert what the user sees, not the route they were routed through:
 
-Bad:
 ```ruby
-context "when a notification is sent" do
-  it "includes an unsubscribe link in the email body" do
-    TestSuiteRunResultNotification.send_notifications
-
-    expect(SentEmail.last.body).to include("stop receiving these emails")
-  end
+it "redirects to the repositories page" do
+  visit root_path
+  expect(page).to have_current_path(repositories_path)
 end
 ```
 
-Good:
+The bad version is a routing check. The user-visible claim is richer:
+
 ```ruby
-describe "unsubscribe from notification emails", type: :request do
-  let!(:test_suite_run) { create(:test_suite_run, cached_status: "Passed") }
-  let!(:repository) { test_suite_run.repository }
-
-  before do
-    allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
-    login_as(repository.user)
-    TestSuiteRunResultNotification.send_notifications
-  end
-
-  it "disables notification emails for the repository" do
-    email_body = SentEmail.last.body
-    unsubscribe_path = email_body[/href="([^"]*unsubscribe[^"]*)"/, 1]
-
-    get unsubscribe_path
-
-    expect(repository.reload.send_test_suite_run_result_emails).to eq(false)
-  end
+it "redirects to the repositories page" do
+  visit root_path
+  expect(page).to have_content("Repositories")
 end
 ```
 
-## Maintain an Appropriately High Level of Abstraction
-
-Bad:
-```ruby
-context "when called twice" do
-  it "queries the database only once" do
-    dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
-
-    query_count = 0
-    callback = lambda { |*, _| query_count += 1 }
-    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
-      dispatcher.test_suite_runs_with_undispatched_tasks
-      query_count_after_first_call = query_count
-      dispatcher.test_suite_runs_with_undispatched_tasks
-      expect(query_count).to eq(query_count_after_first_call)
-    end
-  end
-end
-```
-
-What's happening in this test? I'm assaulted with a dense block of incidental details! The following is much clearer. It hides incidental details and shows me the essence of the test.
-
-Good:
-```ruby
-context "when called twice" do
-  it "queries the database only once" do
-    dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
-
-    first_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
-    second_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
-
-    expect(second_call_count).to eq(0)
-  end
-
-  def count_queries(&block)
-    count = 0
-    callback = lambda { |*, _| count += 1 }
-    ActiveSupport::Notifications.subscribed(callback, "sql.active_record", &block)
-    count
-  end
-end
-```
-
-Note carefully that the helper method `count_queries` appears *after* the test, since the helper itself is an incidental detail, not part of the essential meaning of the test.
-
-## Don't Use Hacks to Test Private Methods
-
-Never use `#send` or `#public_send` to test private methods. If you feel yourself wanting to test a method directly but you can't because it's private, just make the method public. It's usually a quite acceptable price to pay.
-
-## Don't Tightly Couple Tests to Implementation Details
-
-Bad:
+Drive the public seam, not a flag deep inside the code — here, making the task *finish* (an exit code) instead of installing the internal json it happens to read:
 
 ```ruby
-context "when a test suite run finishes" do
-  it "shows the finished status in the sidebar" do
-    visit repository_test_suite_run_path(repository, test_suite_run)
-
-    within ".test-suite-run-list" do
-      expect(page).to have_content("Running")
-    end
-
-    # The following line is the bad part
-    task.update!(json_output: { "summary" => { "failure_count" => 0 } }.to_json)
-
-    http_request(
-      api_authorization_headers: worker_agents_api_authorization_headers(task),
-      path: api_v1_worker_agents_task_task_finished_events_path(task_id: task.id)
-    )
-
-    within ".test-suite-run-list" do
-      expect(page).to have_content("Passed", wait: 3)
-    end
-  end
-end
+task.update!(json_output: { "summary" => { "failure_count" => 0 } }.to_json)
 ```
 
-Good:
+→
 
 ```ruby
-context "when a test suite run finishes" do
-  it "shows the finished status in the sidebar" do
-    visit repository_test_suite_run_path(repository, test_suite_run)
-
-    within ".test-suite-run-list" do
-      expect(page).to have_content("Running")
-    end
-
-    task.update!(exit_code: 0)
-
-    http_request(
-      api_authorization_headers: worker_agents_api_authorization_headers(task),
-      path: api_v1_worker_agents_task_task_finished_events_path(task_id: task.id)
-    )
-
-    within ".test-suite-run-list" do
-      expect(page).to have_content("Passed", wait: 3)
-    end
-  end
-end
+task.update!(exit_code: 0)
 ```
 
-Bad:
+And read an email with a parser, not a hand-rolled regex that only knows yesterday's markup:
+
 ```ruby
 def unsubscribe_path_from(sent_email)
   url = sent_email.body[/href="([^"]*notification_email_subscription[^"]*)"/, 1]
@@ -463,7 +151,8 @@ def unsubscribe_path_from(sent_email)
 end
 ```
 
-Good:
+→
+
 ```ruby
 def unsubscribe_path_from(sent_email)
   doc = Nokogiri::HTML(sent_email.body)
@@ -472,120 +161,40 @@ def unsubscribe_path_from(sent_email)
 end
 ```
 
-## Use an Arrange, Act, Assert Format
+Reach the public surface, never the object's insides. Do not use `.send`, `.public_send`, or `instance_variable_set` to touch a private method or variable. If a private method genuinely needs its own test, make it public — that is usually a small, honest price. And `instance_variable_set` is a confession of poor design: when it feels like the only option, name the design flaw and propose the concrete refactor instead of installing the test.
 
-Bad:
+## Essence
+
+**Assert only what matters.** Skip claims the response body already implies — if a body assertion fails, the response was not successful, so a separate `be_successful` check adds nothing but noise:
+
 ```ruby
-require "rails_helper"
+expect(response).to be_successful  # implied by the body check
+expect(response.body).not_to include("deleted_item")
+```
 
-describe "Sidebar test suite run status", type: :system do
-  context "when a test suite run finishes" do
-    it "shows the finished status in the sidebar" do
-      task = create(:task, :dispatched)
-      test_suite_run = task.test_suite_run
-      repository = test_suite_run.repository
+→
 
-      test_suite_run.cache_status
-      allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
-      login_as(repository.user)
+```ruby
+expect(response.body).not_to include("deleted_item")
+```
 
-      visit repository_test_suite_run_path(repository, test_suite_run)
+Do not write tests that cannot fail — they answer "Is the code I wrote the code I wrote?" and the answer is always yup. A test that repeats the fixture's answer back into an expectation is autobiography, not a specification:
 
-      within ".test-suite-run-list" do
-        expect(page).to have_content("Running")
-      end
+```ruby
+it "renders a labeled checkbox for each github account" do
+  first_github_account = create(:github_account, account_name: "first-account")
+  second_github_account = create(:github_account, account_name: "second-account")
 
-      task.update!(exit_code: 0)
+  get admin_job_runs_path
 
-      within ".test-suite-run-list" do
-        expect(page).to have_content("Passed")
-      end
-    end
-  end
+  document = Nokogiri::HTML(response.body)
+  expect(labeled_checkbox_value(document, "first-account")).to eq(first_github_account.id)
+  expect(labeled_checkbox_value(document, "second-account")).to eq(second_github_account.id)
 end
 ```
 
-Good:
-```ruby
-require "rails_helper"
+Prefer a few concrete cases over one packed abstraction. The abstract version spends all its naming energy on the setup and still obscures the only claim under test:
 
-describe "Sidebar test suite run status", type: :system do
-  # Beginning of Arrange
-  let!(:task) { create(:task, :dispatched) }
-  let!(:test_suite_run) { task.test_suite_run }
-  let!(:repository) { test_suite_run.repository }
-
-  before do
-    test_suite_run.cache_status
-    allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
-    login_as(repository.user)
-  end
-  # End of Arrange
-
-  context "when a test suite run finishes" do
-    before do
-      # Beginning of Act (make the test suite run finish)
-      visit repository_test_suite_run_path(repository, test_suite_run)
-
-      within ".test-suite-run-list" do
-        expect(page).to have_content("Running")
-      end
-
-      task.update!(exit_code: 0)
-      # End of Act
-    end
-
-    it "shows the finished status in the sidebar" do
-      # Beginning of Assert
-      within ".test-suite-run-list" do
-        expect(page).to have_content("Passed")
-      end
-      # End of Assert
-    end
-  end
-end
-```
-
-Another example:
-
-Worse:
-```ruby
-it "shows only job runs belonging to the selected account" do
-  # Arrange
-  selected_account = create(:github_account)
-  selected_job_run = create(:job_run, repository: create(:repository, github_account: selected_account))
-  other_job_run = create(:job_run, repository: create(:repository, github_account: create(:github_account)))
-
-  # Act
-  get admin_job_runs_path(github_account_ids: [selected_account.id])
-
-  # Assert
-  expect(response.body).to include(selected_job_run.id)
-  expect(response.body).not_to include(other_job_run.id)
-end
-```
-
-Better:
-```ruby
-context "when filtered by github account" do
-  let!(:selected_account) { create(:github_account) }
-  let!(:selected_job_run) { create(:job_run, repository: create(:repository, github_account: selected_account)) }
-  let!(:other_job_run) { create(:job_run, repository: create(:repository, github_account: create(:github_account))) }
-
-  before do
-    get admin_job_runs_path(github_account_ids: [selected_account.id])
-  end
-
-  it "shows only job runs belonging to the selected account" do
-    expect(response.body).to include(selected_job_run.id)
-    expect(response.body).not_to include(other_job_run.id)
-  end
-end
-```
-
-## Favor Concrete Examples Over Abstractions
-
-Bad:
 ```ruby
 describe "#matches?" do
   context "when the root job run's status is one of the filter's statuses" do
@@ -595,14 +204,14 @@ describe "#matches?" do
     it "is a match" do
       job_run_tree = JobRunTree.new(failed_job_run)
       filter_criteria = JobRunListFilterCriteria.new(branch_name: nil, statuses: ["Failed"])
-
       expect(job_run_tree.matches?(filter_criteria)).to eq(true)
     end
   end
 end
 ```
 
-Good:
+Split the same claim into two concrete cases that read at a glance:
+
 ```ruby
 describe "#matches?" do
   context "when filtering for failed job runs" do
@@ -629,9 +238,146 @@ describe "#matches?" do
 end
 ```
 
-## Tests Should Not Be Programs
+And name the class under test rather than hiding it behind `described_class` — the indirection obscures the very subject and is rarely worth the confusion it causes.
 
-Tests should be flat and static. The following is an example of how a test should NOT be.
+## Abstraction level
+
+**Keep a test at one level of abstraction, read top-to-bottom.**
+
+Do not bury the scenario in a `describe` that re-states the whole suite. Name the scenario at its own level:
+
+```ruby
+describe "Rerun test suite run", type: :system do
+  ...
+  describe "Rerun Failed button" do
+    context "when the test suite run has failed tests" do
+      let!(:test_suite_run) { create(:test_suite_run, :with_task) }
+
+      before do
+        allow(ENV).to receive(:fetch).and_call_original
+        allow(ENV).to receive(:fetch).with("NOVA_K8S_API_URL").and_return("https://k8s.example.com")
+        allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
+        login_as(test_suite_run.repository.user)
+      end
+
+      it "displays the Rerun Failed button" do
+        visit repository_test_suite_run_path(id: test_suite_run.id, repository_id: test_suite_run.repository.id)
+        expect(page).to have_button("Rerun Failed")
+      end
+    end
+  end
+end
+```
+
+The description wraps the button test in the whole-suite frame that has nothing to say about it. Test the scene as its own scene:
+
+```ruby
+describe "Rerun Failed button", type: :system do
+  context "when the test suite run has failed tests" do
+    let!(:test_suite_run) { create(:test_suite_run, :with_task) }
+    let!(:test_case_run) { create(:test_case_run, task: test_suite_run.tasks.first, status: "failed") }
+
+    before do
+      login_as(test_suite_run.repository.user)
+    end
+
+    it "displays the Rerun Failed button" do
+      visit repository_test_suite_run_path(id: test_suite_run.id, repository_id: test_suite_run.repository.id)
+      expect(page).to have_button("Rerun Failed")
+    end
+  end
+end
+```
+
+Note what the rewrite dropped: the `before` no longer fabricates the entire k8s environment the suite needed — the scene itself does not need it, so it did not belong at this level.
+
+### Shape each test Arrange, Act, Assert
+
+Separate setup from the trigger from the expected outcome: let the `let!` hold the Arrange, the `before` the Act, and the `it` the Assert:
+
+```ruby
+it "shows only job runs belonging to the selected account" do
+  selected_account = create(:github_account)
+  selected_job_run = create(:job_run, repository: create(:repository, github_account: selected_account))
+  other_job_run = create(:job_run, repository: create(:repository, github_account: create(:github_account)))
+
+  get admin_job_runs_path(github_account_ids: [selected_account.id])
+
+  expect(response.body).to include(selected_job_run.id)
+  expect(response.body).not_to include(other_job_run.id)
+end
+```
+
+→
+
+```ruby
+context "when filtered by github account" do
+  let!(:selected_account) { create(:github_account) }
+  let!(:selected_job_run) { create(:job_run, repository: create(:repository, github_account: selected_account)) }
+  let!(:other_job_run) { create(:job_run, repository: create(:repository, github_account: create(:github_account))) }
+
+  before { get admin_job_runs_path(github_account_ids: [selected_account.id]) }
+
+  it "shows only job runs belonging to the selected account" do
+    expect(response.body).to include(selected_job_run.id)
+    expect(response.body).not_to include(other_job_run.id)
+  end
+end
+```
+
+### Push incidental ceremony below the test
+
+A dense test drowns the point in machinery. Hide the machinery in a helper that sits *below* the test, since the helper is an incidental detail, not part of the test's meaning:
+
+```ruby
+it "queries the database only once" do
+  dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
+
+  query_count = 0
+  callback = ->(*, _) { query_count += 1 }
+  ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+    dispatcher.test_suite_runs_with_undispatched_tasks
+    query_count_after_first_call = query_count
+    dispatcher.test_suite_runs_with_undispatched_tasks
+    expect(query_count).to eq(query_count_after_first_call)
+  end
+end
+```
+
+→
+
+```ruby
+it "queries the database only once" do
+  dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
+
+  first_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
+  second_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
+
+  expect(second_call_count).to eq(0)
+end
+
+def count_queries(&block)
+  count = 0
+  callback = ->(*) { count += 1 }
+  ActiveSupport::Notifications.subscribed(callback, "sql.active_record", &block)
+  count
+end
+```
+
+### Write setup top-to-bottom, and hard-code what you can
+
+Read order matters: a mock that names `task_id` before `task_id` is defined reads backwards. Define the thing first, or skip the let entirely and write the literal:
+
+```ruby
+let!(:executor) { instance_double(Executor, task_id: '123') }
+let!(:worker) { Worker.new(executor) }
+```
+
+The literal is better still: when nothing else references the value, a `let` is ceremony — hard-code it.
+
+## Tests are not programs
+
+**Specs are flat and static.** The minute a test gains control flow — a loop, a counter, a poll, a branching stub — it stops specifying and starts implementing. It raises more questions than it answers and its failures are cryptic. Consider:
 
 ```ruby
 it 'treats a timed-out job run as finished' do
@@ -654,16 +400,29 @@ it 'treats a timed-out job run as finished' do
 end
 ```
 
-## No Speculative Coding
+A reader must unwrap a stateful stub to trust a single status change. Keep the test a plain Arrange-Act-Assert.
+
+The quiet cousin of that failure is behavior the test never earns — a `wait:` someone cargo-culted in, a sleep, a retry. Ask whether it is fixing a real race you found or just covering for one you imagine:
 
 ```ruby
 expect(page).to have_content("Passed", wait: 3)
 ```
 
-Is the "wait" really needed, or was it just cargo culted? Scrutinize such choices.
+Add `wait:` only where a later assertion genuinely races an asynchronous step; otherwise the extra wait trades a passing-but-leaky suite today for a mystifying failure later.
 
-## Miscellaneous
+## Determinism
 
-Never use `instance_variable_set`. In cases where it seems like `instance_variable_set` is the only option, that's probably a sign of poor design. In that case you should pause, try to find the poor design, and suggest a specific refactor.
+**Ask for the record you want, not the first or last record there happens to be.** `.first` and `.last` depend on record order, which silently changes; a test that relies on it fails for reasons unrelated to the behavior under test. Turn the incidental read into an explicit query with `where`:
 
-Don't use `described_class`. It only adds obscurity. Just use the actual class name.
+```ruby
+post repositories_path, params: { repo_full_name: "example-org/sample-app" }
+repository = Repository.last
+expect(repository.github_account).to eq(github_account)
+```
+
+→
+
+```ruby
+expect { post repositories_path, params: { repo_full_name: "example-org/sample-app" } }
+  .to change { Repository.where(github_account: github_account).count }.by(1)
+```
