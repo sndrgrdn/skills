@@ -24,7 +24,7 @@ end
 ```erb
 <%# app/views/conversations/show.html.erb %>
 
-<%# BAD: subscribes to a global stream — receives messages from all conversations %>
+<%# BAD: subscribes to a global stream, receives messages from all conversations %>
 <%= turbo_stream_from "messages" %>
 
 <div id="messages">

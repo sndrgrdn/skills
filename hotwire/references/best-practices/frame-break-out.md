@@ -14,7 +14,7 @@ When a Turbo Frame request receives a response that does not contain a matching 
 ```erb
 <%# app/views/projects/show.html.erb %>
 <%# When session expires, this frame request redirects to /login
-    but the login page has no matching frame — user sees blank space %>
+    but the login page has no matching frame, user sees blank space %>
 <%= turbo_frame_tag "project_comments",
     src: project_comments_path(@project) do %>
   <p>Loading comments...</p>
@@ -30,7 +30,7 @@ class ApplicationController < ActionController::Base
 
   def authenticate_user!
     unless current_user
-      # This redirect breaks frame requests — login page
+      # This redirect breaks frame requests, login page
       # won't have a matching turbo-frame tag
       redirect_to login_path
     end
@@ -64,7 +64,7 @@ class ApplicationController < ActionController::Base
 
   def authenticate_user!
     unless current_user
-      # Redirect normally — the meta tag on the login page handles breakout.
+      # Redirect normally; the meta tag on the login page handles breakout.
       # Turbo fetches the redirect target, sees turbo-visit-control="reload",
       # and triggers a full-page navigation automatically.
       redirect_to login_path
@@ -82,7 +82,7 @@ end
 <% end %>
 ```
 
-**Caveat:** `turbo-visit-control="reload"` causes two GET requests — the first is the frame fetch that discovers the meta tag, and the second is the full-page reload Turbo triggers. Flash messages set during the redirect are consumed by the first request and lost before the second. If flash preservation matters, prefer handling the redirect in the controller with `turbo_frame_request?`:
+**Caveat:** `turbo-visit-control="reload"` causes two GET requests: the first is the frame fetch that discovers the meta tag, and the second is the full-page reload Turbo triggers. Flash messages set during the redirect are consumed by the first request and lost before the second. If flash preservation matters, prefer handling the redirect in the controller with `turbo_frame_request?`:
 
 ```ruby
 # app/controllers/application_controller.rb

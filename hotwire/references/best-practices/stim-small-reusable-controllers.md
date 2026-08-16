@@ -89,4 +89,4 @@ export default class extends Controller {
 }
 ```
 
-Reference: [Stimulus Handbook — Origin](https://stimulus.hotwired.dev/handbook/origin)
+Reference: [Stimulus Handbook, Origin](https://stimulus.hotwired.dev/handbook/origin)

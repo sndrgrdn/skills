@@ -14,7 +14,7 @@ Even with morphing enabled, Turbo may still replace elements whose server-render
 ```erb
 <%# app/views/shared/_notification_dropdown.html.erb %>
 
-<%# No permanent marker — morph replaces this with server HTML (closed state) %>
+<%# No permanent marker, morph replaces this with server HTML (closed state) %>
 <div id="notification_dropdown" class="dropdown">
   <button data-controller="dropdown" data-action="click->dropdown#toggle">
     Notifications (<%= current_user.unread_notifications_count %>)

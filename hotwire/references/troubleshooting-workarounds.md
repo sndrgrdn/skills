@@ -45,19 +45,19 @@ end
 **Root cause:** Turbo replaces the `<body>` on navigation; DOM event listeners attached to specific elements are discarded. Code bound on `DOMContentLoaded` only runs once.
 
 **Fix:** Use one of:
-- **Stimulus controllers** — `connect()` re-runs each time the element enters the DOM.
+- **Stimulus controllers**, `connect()` re-runs each time the element enters the DOM.
 - **Event delegation** on `document` or a persistent ancestor.
 - **`turbo:load`** event instead of `DOMContentLoaded` (fires on every navigation).
 - **`turbo:frame-render`** for listeners on elements inside frames.
 
 ```js
-// BAD — only runs once
+// BAD, only runs once
 document.addEventListener('DOMContentLoaded', () => { ... });
 
-// GOOD — runs on every navigation
+// GOOD, runs on every navigation
 document.addEventListener('turbo:load', () => { ... });
 
-// BEST — Stimulus handles lifecycle automatically
+// BEST, Stimulus handles lifecycle automatically
 export default class extends Controller {
   connect() { /* re-runs on every appearance */ }
 }
@@ -149,7 +149,7 @@ Rules:
 - For non-Rails backends, set `Content-Type: text/vnd.turbo-stream.html; charset=utf-8` explicitly.
 
 ```ruby
-# Rails — correct
+# Rails, correct
 respond_to do |format|
   format.turbo_stream { render turbo_stream: turbo_stream.append("items", partial: "item") }
 end
@@ -163,7 +163,7 @@ end
 
 **Fix:**
 - Turbo automatically disables `<button type="submit">` during submission (sets `disabled` attribute). Ensure CSS reflects disabled state.
-- Don't call `form.submit()` programmatically alongside Turbo — use `form.requestSubmit()` instead which triggers Turbo's interception.
+- Don't call `form.submit()` programmatically alongside Turbo, use `form.requestSubmit()` instead which triggers Turbo's interception.
 - For custom submit triggers, listen for `turbo:submit-start` / `turbo:submit-end` to gate the UI.
 
 ```js
@@ -258,7 +258,7 @@ See `references/navigation/2023-09-12-turbo-frames-scroll-position-restoration.m
 
 **Fix:**
 - Confirm the frame is actually below the fold / outside the viewport on initial render.
-- If the frame is conditionally visible (e.g., inside a collapsed accordion), don't set `src` until the container is expanded — set it dynamically via Stimulus.
+- If the frame is conditionally visible (e.g., inside a collapsed accordion), don't set `src` until the container is expanded, set it dynamically via Stimulus.
 - As a fallback, omit `src` initially and set it when the element should load:
 
 ```js

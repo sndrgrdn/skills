@@ -8,8 +8,6 @@ disable-model-invocation: true
 
 Review the specified tests against every rule below. When the caller supplies a diff instead of files, also read the application code it exercises so each rule can be judged.
 
-The rules are framework-neutral. Examples speak spec, not test: `describe`, `context`, `it`, `expect`, `before`, `let`, `double` — the DSL family that RSpec, Jest, Vitest, and Jasmine share, so a spec reads the same way in each. The objects inside the blocks are pseudo-code; map them and the matchers (`to eq`, `include`, `change`, `have_content`) onto the framework and language you actually run.
-
 ## Process
 
 1. **Pin the scope.** Take the files, diff, revisions, or pull request the caller named. When none is named, ask for a target — never infer one from a branch or a default ref.
@@ -41,7 +39,7 @@ Good: `describe "rerunning only failed tests"`
 
 ## Ends, not means
 
-**Assert the outcome, never the mechanism.** A test should survive the implementation being replaced — a different class, function, flag, or cache — so long as what the user or the system observes stays the same. Mock-recording assertions (`have_received`, `toHaveBeenCalledWith`), reads of cache-store keys, and reach-ins to internals all test *means*; assert the observable *end* instead, and stub only what you must (external services), so the real code runs against the real outcome.
+**Assert the outcome, never the mechanism.** A test should survive the implementation being replaced — a different class, method, flag, or cache — so long as what the user or the system observes stays the same. Mock-recording assertions (`have_received`), reads of cache store keys, and reach-ins to internals all test *means*; assert the observable *end* instead, and stub only what you must (external services), so the real code runs against the real outcome.
 
 Assert the end result, not the pose that produced it:
 
@@ -71,7 +69,7 @@ Assert observable behavior, not method calls:
 
 ```ruby
 it "queues the task" do
-  worker_pool = double(WorkerPool, queue_task: nil)
+  worker_pool = instance_double(WorkerPool, queue_task: nil)
   allow(WorkerPool).to receive(:new).and_return(worker_pool)
 
   QueueUnqueuedTasksJob.new.perform
@@ -94,7 +92,7 @@ Performance semantics too — test the effect, not the cache's key:
 ```ruby
 it "caches the result" do
   test_suite_run.duration
-  expect(cache_store.read("test_suite_run/#{test_suite_run.id}/duration")).not_to be_nil
+  expect(Rails.cache.read("test_suite_run/#{test_suite_run.id}/duration")).not_to be_nil
 end
 ```
 
@@ -104,9 +102,13 @@ The bad version reads the cache implementation; a future switch to memoization o
 it "does not query the database on subsequent calls" do
   test_suite_run.duration
 
-  first_call_count = count_queries { test_suite_run.duration }
+  query_count = 0
+  callback = ->(*) { query_count += 1 }
+  ActiveSupport::Notifications.subscribe("sql.active_record", callback)
+  test_suite_run.duration
+  ActiveSupport::Notifications.unsubscribe(callback)
 
-  expect(first_call_count).to eq(0)
+  expect(query_count).to eq(0)
 end
 ```
 
@@ -143,22 +145,27 @@ task.update!(exit_code: 0)
 And read an email with a parser, not a hand-rolled regex that only knows yesterday's markup:
 
 ```ruby
-url = sent_email.body[/href="([^"]*notification_email_subscription[^"]*)"/, 1]
+def unsubscribe_path_from(sent_email)
+  url = sent_email.body[/href="([^"]*notification_email_subscription[^"]*)"/, 1]
+  URI.parse(url).path
+end
 ```
 
 →
 
 ```ruby
-document = parse_html(sent_email.body)
-link = document.at("a:contains('Stop receiving these emails')")
-url = link["href"]
+def unsubscribe_path_from(sent_email)
+  doc = Nokogiri::HTML(sent_email.body)
+  url = doc.at("a:contains('Stop receiving these emails')")["href"]
+  URI.parse(url).path
+end
 ```
 
-Reach the public surface, never the object's insides. Do not use reflection, `send`, or instance-variable injection to touch a private method or variable — every language has its own flavor of the reach-in, and all of them test means. If a private method genuinely needs its own test, make it public — that is usually a small, honest price. And injecting an instance variable (`instance_variable_set` and friends) is a confession of poor design: when it feels like the only option, name the design flaw and propose the concrete refactor instead of installing the test.
+Reach the public surface, never the object's insides. Do not use `.send`, `.public_send`, or `instance_variable_set` to touch a private method or variable. If a private method genuinely needs its own test, make it public — that is usually a small, honest price. And `instance_variable_set` is a confession of poor design: when it feels like the only option, name the design flaw and propose the concrete refactor instead of installing the test.
 
 ## Essence
 
-**Assert only what matters.** Skip claims the response already implies — if a body assertion fails, the response was not successful, so a separate success check adds nothing but noise:
+**Assert only what matters.** Skip claims the response body already implies — if a body assertion fails, the response was not successful, so a separate `be_successful` check adds nothing but noise:
 
 ```ruby
 expect(response).to be_successful  # implied by the body check
@@ -175,12 +182,12 @@ Do not write tests that cannot fail — they answer "Is the code I wrote the cod
 
 ```ruby
 it "renders a labeled checkbox for each github account" do
-  first_github_account = create(GithubAccount, account_name: "first-account")
-  second_github_account = create(GithubAccount, account_name: "second-account")
+  first_github_account = create(:github_account, account_name: "first-account")
+  second_github_account = create(:github_account, account_name: "second-account")
 
   get admin_job_runs_path
 
-  document = parse_html(response.body)
+  document = Nokogiri::HTML(response.body)
   expect(labeled_checkbox_value(document, "first-account")).to eq(first_github_account.id)
   expect(labeled_checkbox_value(document, "second-account")).to eq(second_github_account.id)
 end
@@ -191,8 +198,8 @@ Prefer a few concrete cases over one packed abstraction. The abstract version sp
 ```ruby
 describe "#matches?" do
   context "when the root job run's status is one of the filter's statuses" do
-    let!(:failed_job_run) { create(JobRun) }
-    let!(:failed_task) { create(Task, status: "failed", job_run: failed_job_run) }
+    let!(:failed_job_run) { create(:job_run) }
+    let!(:failed_task) { create(:task, :failed, job_run: failed_job_run) }
 
     it "is a match" do
       job_run_tree = JobRunTree.new(failed_job_run)
@@ -211,8 +218,8 @@ describe "#matches?" do
     let!(:filter_criteria) { JobRunListFilterCriteria.new(branch_name: nil, statuses: ["Failed"]) }
 
     context "and the root job run failed" do
-      let!(:root_job_run) { create(JobRun) }
-      let!(:failed_task) { create(Task, status: "failed", job_run: root_job_run) }
+      let!(:root_job_run) { create(:job_run) }
+      let!(:failed_task) { create(:task, :failed, job_run: root_job_run) }
 
       it "matches the tree" do
         expect(JobRunTree.new(root_job_run).matches?(filter_criteria)).to eq(true)
@@ -220,8 +227,8 @@ describe "#matches?" do
     end
 
     context "and the root job run passed" do
-      let!(:root_job_run) { create(JobRun) }
-      let!(:passed_task) { create(Task, status: "passed", job_run: root_job_run) }
+      let!(:root_job_run) { create(:job_run) }
+      let!(:passed_task) { create(:task, :passed, job_run: root_job_run) }
 
       it "does not match the tree" do
         expect(JobRunTree.new(root_job_run).matches?(filter_criteria)).to eq(false)
@@ -231,7 +238,7 @@ describe "#matches?" do
 end
 ```
 
-And name the class under test rather than hiding it behind a framework indirection (`described_class`, `subject`) — the indirection obscures the very subject and is rarely worth the confusion it causes.
+And name the class under test rather than hiding it behind `described_class` — the indirection obscures the very subject and is rarely worth the confusion it causes.
 
 ## Abstraction level
 
@@ -244,12 +251,12 @@ describe "Rerun test suite run", type: :system do
   ...
   describe "Rerun Failed button" do
     context "when the test suite run has failed tests" do
-      let!(:test_suite_run) { create(TestSuiteRun, with_task: true) }
+      let!(:test_suite_run) { create(:test_suite_run, :with_task) }
 
       before do
         allow(ENV).to receive(:fetch).and_call_original
         allow(ENV).to receive(:fetch).with("NOVA_K8S_API_URL").and_return("https://k8s.example.com")
-        allow(User).to receive(:can_access_repository?).and_return(true)
+        allow_any_instance_of(User).to receive(:can_access_repository?).and_return(true)
         login_as(test_suite_run.repository.user)
       end
 
@@ -262,13 +269,13 @@ describe "Rerun test suite run", type: :system do
 end
 ```
 
-The outer `describe` wraps the button test in the whole-suite frame that has nothing to say about it. Test the scene as its own scene:
+The description wraps the button test in the whole-suite frame that has nothing to say about it. Test the scene as its own scene:
 
 ```ruby
 describe "Rerun Failed button", type: :system do
   context "when the test suite run has failed tests" do
-    let!(:test_suite_run) { create(TestSuiteRun, with_task: true) }
-    let!(:test_case_run) { create(TestCaseRun, task: test_suite_run.tasks.first, status: "failed") }
+    let!(:test_suite_run) { create(:test_suite_run, :with_task) }
+    let!(:test_case_run) { create(:test_case_run, task: test_suite_run.tasks.first, status: "failed") }
 
     before do
       login_as(test_suite_run.repository.user)
@@ -286,13 +293,13 @@ Note what the rewrite dropped: the `before` no longer fabricates the entire k8s 
 
 ### Shape each test Arrange, Act, Assert
 
-Separate setup from the trigger from the expected outcome: the `let!` holds the Arrange, the `before` the Act, and the `it` the Assert:
+Separate setup from the trigger from the expected outcome: let the `let!` hold the Arrange, the `before` the Act, and the `it` the Assert:
 
 ```ruby
 it "shows only job runs belonging to the selected account" do
-  selected_account = create(GithubAccount)
-  selected_job_run = create(JobRun, repository: create(Repository, github_account: selected_account))
-  other_job_run = create(JobRun, repository: create(Repository, github_account: create(GithubAccount)))
+  selected_account = create(:github_account)
+  selected_job_run = create(:job_run, repository: create(:repository, github_account: selected_account))
+  other_job_run = create(:job_run, repository: create(:repository, github_account: create(:github_account)))
 
   get admin_job_runs_path(github_account_ids: [selected_account.id])
 
@@ -305,9 +312,9 @@ end
 
 ```ruby
 context "when filtered by github account" do
-  let!(:selected_account) { create(GithubAccount) }
-  let!(:selected_job_run) { create(JobRun, repository: create(Repository, github_account: selected_account)) }
-  let!(:other_job_run) { create(JobRun, repository: create(Repository, github_account: create(GithubAccount))) }
+  let!(:selected_account) { create(:github_account) }
+  let!(:selected_job_run) { create(:job_run, repository: create(:repository, github_account: selected_account)) }
+  let!(:other_job_run) { create(:job_run, repository: create(:repository, github_account: create(:github_account))) }
 
   before { get admin_job_runs_path(github_account_ids: [selected_account.id]) }
 
@@ -324,7 +331,24 @@ A dense test drowns the point in machinery. Hide the machinery in a helper that 
 
 ```ruby
 it "queries the database only once" do
-  dispatcher = TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
+  dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
+
+  query_count = 0
+  callback = ->(*, _) { query_count += 1 }
+  ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+    dispatcher.test_suite_runs_with_undispatched_tasks
+    query_count_after_first_call = query_count
+    dispatcher.test_suite_runs_with_undispatched_tasks
+    expect(query_count).to eq(query_count_after_first_call)
+  end
+end
+```
+
+→
+
+```ruby
+it "queries the database only once" do
+  dispatcher = TestSuiteExecution::TestSuiteRunDispatcher.new(cluster_cpu_headroom_millicores: 72000)
 
   first_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
   second_call_count = count_queries { dispatcher.test_suite_runs_with_undispatched_tasks }
@@ -334,18 +358,18 @@ end
 
 def count_queries(&block)
   count = 0
-  on_query { count += 1 }
-  block.call
+  callback = ->(*) { count += 1 }
+  ActiveSupport::Notifications.subscribed(callback, "sql.active_record", &block)
   count
 end
 ```
 
 ### Write setup top-to-bottom, and hard-code what you can
 
-Read order matters: a mock that names `task_id` before `task_id` is defined reads backwards. Define the thing first, or skip the `let` entirely and write the literal:
+Read order matters: a mock that names `task_id` before `task_id` is defined reads backwards. Define the thing first, or skip the let entirely and write the literal:
 
 ```ruby
-let!(:executor) { double(Executor, task_id: '123') }
+let!(:executor) { instance_double(Executor, task_id: '123') }
 let!(:worker) { Worker.new(executor) }
 ```
 
@@ -388,7 +412,7 @@ Add `wait:` only where a later assertion genuinely races an asynchronous step; o
 
 ## Determinism
 
-**Ask for the record you want, not the first or last record there happens to be.** `.first` and `.last` depend on record order, which silently changes; a test that relies on them fails for reasons unrelated to the behavior under test. Turn the incidental read into an explicit query with `where`:
+**Ask for the record you want, not the first or last record there happens to be.** `.first` and `.last` depend on record order, which silently changes; a test that relies on it fails for reasons unrelated to the behavior under test. Turn the incidental read into an explicit query with `where`:
 
 ```ruby
 post repositories_path, params: { repo_full_name: "example-org/sample-app" }

@@ -9,7 +9,7 @@ tags: drive, error-handling, resilience, events
 
 When Turbo Drive encounters a server error (500), network failure, or timeout, it either shows the raw error response or silently fails. When a Turbo Frame request fails, the frame goes blank with no feedback. Turbo emits events at each failure point (`turbo:fetch-request-error`, `turbo:frame-missing`, `turbo:frame-render`) that let you intercept errors and show meaningful feedback instead of leaving users staring at a broken page.
 
-**Incorrect (no error handling — server errors show raw HTML or blank frames):**
+**Incorrect (no error handling, server errors show raw HTML or blank frames):**
 
 ```erb
 <%# app/views/projects/show.html.erb %>
@@ -20,7 +20,7 @@ When Turbo Drive encounters a server error (500), network failure, or timeout, i
   <p>Loading comments...</p>
 <% end %>
 
-<%# No error handling configured — a network failure during Drive navigation
+<%# No error handling configured, a network failure during Drive navigation
     shows a blank page or the browser's default error %>
 ```
 
@@ -71,7 +71,7 @@ function showFlash(message, level) {
 ```
 
 **When NOT to use this pattern:**
-- For API-only endpoints that don't serve HTML — use standard HTTP error handling
+- For API-only endpoints that don't serve HTML, use standard HTTP error handling
 - In development mode where you want to see full error pages for debugging
 
-Reference: [Turbo Reference — Events](https://turbo.hotwired.dev/reference/events)
+Reference: [Turbo Reference, Events](https://turbo.hotwired.dev/reference/events)

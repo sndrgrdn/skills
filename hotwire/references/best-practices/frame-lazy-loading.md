@@ -43,13 +43,13 @@ Turbo Frames with `loading: :lazy` defer their `src` request until the frame ent
 <%# app/views/projects/show.html.erb %>
 <h1><%= @project.name %></h1>
 
-<%# Above the fold — load immediately (no loading: option needed) %>
+<%# Above the fold, load immediately (no loading: option needed) %>
 <%= turbo_frame_tag "project_details",
     src: project_details_path(@project) do %>
   <p>Loading details...</p>
 <% end %>
 
-<%# Below the fold — lazy-load when user scrolls to them %>
+<%# Below the fold, lazy-load when user scrolls to them %>
 <%= turbo_frame_tag "project_comments",
     src: project_comments_path(@project),
     loading: :lazy do %>

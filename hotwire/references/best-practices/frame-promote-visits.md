@@ -20,7 +20,7 @@ By default, Turbo Frame navigations do not update the browser URL or push entrie
 
 <%# app/views/comments/_pagination.html.erb %>
 <%# Clicking page 3 loads comments but URL stays on /projects/1
-    — user can't share or bookmark page 3 of comments %>
+   , user can't share or bookmark page 3 of comments %>
 <%= turbo_frame_tag "project_comments" do %>
   <div class="comments">
     <%= render @comments %>

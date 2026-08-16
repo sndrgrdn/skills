@@ -1,15 +1,15 @@
 ---
 name: deep-review
-description: Selectable panel review of a branch — Design, Craft, Fitness, and Stability judges finding issues from evidence, gated mechanically.
+description: Selectable panel review of a branch, Design, Craft, Fitness, and Stability judges finding issues from evidence, gated mechanically.
 disable-model-invocation: true
 ---
 
-Deep review of the diff between a pinned review head and a fixed point. Four **judges** are available, each answering one question in an isolated task run. Use the subset named by the caller; default to all four. This session **dispatches** — it gathers the evidence, briefs the selected judges, and applies the gate to their reports; it never judges.
+Deep review of the diff between a pinned review head and a fixed point. Four **judges** are available, each answering one question in an isolated task run. Use the subset named by the caller; default to all four. This session **dispatches**; it gathers the evidence, briefs the selected judges, and applies the gate to their reports; it never judges.
 
-- **Design** — are these the right modules? (reconstruction)
-- **Craft** — is the code inside built right? (rules + smells)
-- **Fitness** — should this exist, in this shape, at all? (premises + value)
-- **Stability** — what does it break? (blast radius)
+- **Design**, are these the right modules? (reconstruction)
+- **Craft**, is the code inside built right? (rules + smells)
+- **Fitness**, should this exist, in this shape, at all? (premises + value)
+- **Stability**, what does it break? (blast radius)
 
 A requested subset defines the review's scope. Unselected judges are omitted, not missing; a selected judge that fails to report is missing.
 
@@ -17,7 +17,7 @@ A requested subset defines the review's scope. Unselected judges are omitted, no
 
 Stated once here; pasted verbatim into every judge's prompt.
 
-> Rules tagged **presumptive blocker** admit five states only: *blocking finding*, *clear*, *inapplicable*, *skipped*, or *unchecked*. Rule condition established + evidence bar met ⇒ the finding is blocking. Every blocker carries an **evidence bar** — the artifact that must exist before the finding may be reported (a module table row, a cut-line plan, a traced dependent, a quoted premise). A finding is a piece of evidence, or it doesn't exist.
+> Rules tagged **presumptive blocker** admit five states only: *blocking finding*, *clear*, *inapplicable*, *skipped*, or *unchecked*. Rule condition established + evidence bar met ⇒ the finding is blocking. Every blocker carries an **evidence bar**, the artifact that must exist before the finding may be reported (a module table row, a cut-line plan, a traced dependent, a quoted premise). A finding is a piece of evidence, or it doesn't exist.
 >
 > Actively seek rule violations and apply the rules as written. Relevant rationale found in the diff, commit messages, PR description, or comments is attached to the finding as a verbatim quote for the human; rationale does not downgrade a finding whose rule condition and evidence bar are met.
 
@@ -42,31 +42,31 @@ Done when the caller supplied the target, both endpoints are full commit SHAs, t
 
 ### 2. Build the census
 
-Facts only — file lists, log lines, quotes. A verdict in the census pre-judges the panel; leave every judgment to the seats.
+Facts only, file lists, log lines, quotes. A verdict in the census pre-judges the panel; leave every judgment to the seats.
 
-- **Stated purpose** — quoted from the PR description (`gh pr view`), issue references in the commit messages (fetched via the workflow in `docs/agents/issue-tracker.md` — missing? run `/setup-matt-pocock-skills`), or, absent both, the commit messages. This is what every hunk must trace to.
-- **Premises** — the stated-purpose source's concrete claims ("nothing does X today", numbers, guarantees), extracted as a numbered list of falsifiable hypotheses.
-- **Siblings** — for each directory the diff touches or creates: list what already lives there and, one line each, what it does.
-- **Trajectory** — `git log --oneline` (recent history) for the sibling areas: which neighboring machinery is recently invested-in, which is long untouched.
-- **House record** — the domain doc per `docs/agents/domain.md` (`CONTEXT.md` at the repo root: bounded-context vocabulary — quote the sections the diff's domain touches), `docs/adr/` titles with any ADR naming the diff's concepts quoted in full, plus every standards doc at the repo root and under `docs/` (`CODING_STANDARDS.md`, `CONTRIBUTING.md`, agent rules files). Where two house records conflict (ADR vs domain doc), quote both — the conflict is a fact.
-- **Measure** — `git diff <fixed-point-sha>..<review-head-sha> --stat`, with hand-written changed lines separated from lockfiles, generated files, and snapshots.
+- **Stated purpose**, quoted from the PR description (`gh pr view`), issue references in the commit messages (fetched via the workflow in `docs/agents/issue-tracker.md`, missing? run `/setup-matt-pocock-skills`), or, absent both, the commit messages. This is what every hunk must trace to.
+- **Premises**, the stated-purpose source's concrete claims ("nothing does X today", numbers, guarantees), extracted as a numbered list of falsifiable hypotheses.
+- **Siblings**, for each directory the diff touches or creates: list what already lives there and, one line each, what it does.
+- **Trajectory**, `git log --oneline` (recent history) for the sibling areas: which neighboring machinery is recently invested-in, which is long untouched.
+- **House record**, the domain doc per `docs/agents/domain.md` (`CONTEXT.md` at the repo root: bounded-context vocabulary, quote the sections the diff's domain touches), `docs/adr/` titles with any ADR naming the diff's concepts quoted in full, plus every standards doc at the repo root and under `docs/` (`CODING_STANDARDS.md`, `CONTRIBUTING.md`, agent rules files). Where two house records conflict (ADR vs domain doc), quote both; the conflict is a fact.
+- **Measure**, `git diff <fixed-point-sha>..<review-head-sha> --stat`, with hand-written changed lines separated from lockfiles, generated files, and snapshots.
 
 Done when all six entries exist and contain only facts.
 
 ### 3. Convene the judges
 
-Read the selected judges' rubrics now — `references/design.md`, `references/craft.md`, `references/fitness.md`, or `references/stability.md`. Each is complete and goes verbatim into its judge's prompt.
+Read the selected judges' rubrics now, `references/design.md`, `references/craft.md`, `references/fitness.md`, or `references/stability.md`. Each is complete and goes verbatim into its judge's prompt.
 
 Convene the selected judges as separate `task` calls in parallel, scoped to review and a judge report. Run Design and Fitness with `effort: "high"`; run Craft and Stability with `effort: "standard"`. Charitable drift lives in the judging seats, so reserve the strongest reasoning for Design and Fitness.
 
 Every prompt carries the diff command, commit list, Blocking policy above, its rubric, this reporting contract, and its evidence packet:
 
-> Every finding is **forensic**: decisive evidence traced end-to-end — cite file:line for source-backed claims and include the rubric's required artifact. Verify any claim you can check in-repo before reporting it. **Fan out** the legwork: table rows and rubric rules are independent obligations, so batch their evidence-gathering tool calls in parallel, serializing only when one result feeds the next. Blocking status follows mechanically from the Blocking policy; label everything else **non-blocking**. Order blocking findings first, then non-blocking findings strongest first. Close with a proof-obligation ledger: report every rubric rule as *finding* (with evidence and blocking status), *clear* (checked, with evidence), *inapplicable* (the diff never touches the concern), *skipped* (the named standard or tool that owns enforcement, with evidence), or *unchecked* (what could not be verified and why). Findings under 500 words; the ledger may be terse lines.
+> Every finding is **forensic**: decisive evidence traced end-to-end, cite file:line for source-backed claims and include the rubric's required artifact. Verify any claim you can check in-repo before reporting it. **Fan out** the legwork: table rows and rubric rules are independent obligations, so batch their evidence-gathering tool calls in parallel, serializing only when one result feeds the next. Blocking status follows mechanically from the Blocking policy; label everything else **non-blocking**. Order blocking findings first, then non-blocking findings strongest first. Close with a proof-obligation ledger: report every rubric rule as *finding* (with evidence and blocking status), *clear* (checked, with evidence), *inapplicable* (the diff never touches the concern), *skipped* (the named standard or tool that owns enforcement, with evidence), or *unchecked* (what could not be verified and why). Findings under 500 words; the ledger may be terse lines.
 
-- **Design** — stated purpose, siblings, and house record.
-- **Craft** — siblings and house record, including the standards docs' contents.
-- **Fitness** — the census in full.
-- **Stability** — stated purpose and premises.
+- **Design**, stated purpose, siblings, and house record.
+- **Craft**, siblings and house record, including the standards docs' contents.
+- **Fitness**, the census in full.
+- **Stability**, stated purpose and premises.
 
 Done when every selected judge is spawned in one call, each prompt carrying the five shared items and its complete evidence packet.
 
@@ -74,12 +74,12 @@ Done when every selected judge is spawned in one call, each prompt carrying the 
 
 The selected judges' full task reports are the **audit trail**. Keep them there; surface any selected seat's full report when the user asks. The default response is a **decision brief** targeting 1,000 words:
 
-1. `# Deep Review — PASS|FAIL|INCOMPLETE` for the full panel, or `# Deep Review (Design + Craft) — PASS|FAIL|INCOMPLETE` for a subset — the single scoped verdict.
-2. `## Blocking findings` — every distinct blocker, each under 100 words: name the finding and corroborating seats, cite the decisive evidence (file:line where source-backed), state the required remedy, and include relevant quoted rationale in one sentence. Write `None` when there are no blockers.
-3. `## Unchecked obligations` — every unchecked presumptive-blocker rule, grouped by seat with the reason. Omit this section when none exist.
-4. `## Seat summary` — one table row per selected seat: blocking count, non-blocking count, and the first finding in that judge's order, or `—` when it filed none.
-5. `## Judgment calls` — the first three non-blocking findings per selected seat in judge order, one line each. When a seat has more, append `<N> more in the full <Seat> report.` Evidence stays in the audit trail.
-6. `## Full reports` — state that the complete reconstruction tables, premise tables, evidence, quoted rationale, and proof-obligation ledgers remain available by seat on request.
+1. `# Deep Review, PASS|FAIL|INCOMPLETE` for the full panel, or `# Deep Review (Design + Craft), PASS|FAIL|INCOMPLETE` for a subset, the single scoped verdict.
+2. `## Blocking findings`, every distinct blocker, each under 100 words: name the finding and corroborating seats, cite the decisive evidence (file:line where source-backed), state the required remedy, and include relevant quoted rationale in one sentence. Write `None` when there are no blockers.
+3. `## Unchecked obligations`, every unchecked presumptive-blocker rule, grouped by seat with the reason. Omit this section when none exist.
+4. `## Seat summary`, one table row per selected seat: blocking count, non-blocking count, and the first finding in that judge's order, or `None` when it filed none.
+5. `## Judgment calls`, the first three non-blocking findings per selected seat in judge order, one line each. When a seat has more, append `<N> more in the full <Seat> report.` Evidence stays in the audit trail.
+6. `## Full reports`, state that the complete reconstruction tables, premise tables, evidence, quoted rationale, and proof-obligation ledgers remain available by seat on request.
 
 Merge findings only when they share one root cause and one required remedy, naming every corroborating seat. Findings on the same artifact with distinct causes or remedies remain distinct blockers. The blocker count, not the raw finding count, is the verdict's weight.
 

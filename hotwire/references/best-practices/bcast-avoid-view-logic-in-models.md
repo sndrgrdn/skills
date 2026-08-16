@@ -46,7 +46,7 @@ class Notification < ApplicationRecord
   belongs_to :user
   belongs_to :notifiable, polymorphic: true
 
-  # Option 1: Declarative — no view coupling, triggers page morph
+  # Option 1: Declarative, no view coupling, triggers page morph
   broadcasts_refreshes_to ->(notification) { [notification.user, :notifications] }
 end
 

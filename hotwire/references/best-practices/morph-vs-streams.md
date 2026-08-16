@@ -72,7 +72,7 @@ end
 
 ```erb
 <%# app/views/projects/show.html.erb %>
-<%# No stream templates needed — the normal view IS the template.
+<%# No stream templates needed; the normal view IS the template.
     All sections (progress bar, counts, feed, badges) render from
     the same server response and morph into place automatically. %>
 <%= turbo_stream_from @project %>

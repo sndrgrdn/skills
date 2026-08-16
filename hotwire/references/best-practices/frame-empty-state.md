@@ -13,7 +13,7 @@ Content placed inside a `turbo_frame_tag` with a `src` attribute displays as a p
 
 ```erb
 <%# app/views/projects/show.html.erb %>
-<%# Users see a blank gap until the frame loads — feels broken %>
+<%# Users see a blank gap until the frame loads, feels broken %>
 <h1><%= @project.name %></h1>
 
 <%= turbo_frame_tag "project_comments",

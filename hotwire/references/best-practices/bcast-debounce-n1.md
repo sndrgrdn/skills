@@ -78,7 +78,7 @@ end
 ```
 
 **When NOT to use this pattern:**
-- Single-record creates/updates — `broadcasts_refreshes_to` is fine as-is
+- Single-record creates/updates, `broadcasts_refreshes_to` is fine as-is
 - Real-time collaborative editing where each keystroke should broadcast
 
-Reference: [Turbo Broadcastable — turbo-rails](https://github.com/hotwired/turbo-rails)
+Reference: [Turbo Broadcastable, turbo-rails](https://github.com/hotwired/turbo-rails)

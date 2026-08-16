@@ -7,7 +7,7 @@ tags: stim, values, state, reactive
 
 ## Use Values API for Reactive Controller State
 
-Stimulus Values let you declare typed state on a controller element via `data-*-value` attributes. When a value changes — whether from JavaScript or from Turbo morphing the DOM — Stimulus fires a `{name}ValueChanged` callback automatically. This replaces manual `getAttribute` calls, keeps state in HTML (the single source of truth), and ensures controllers re-initialize correctly after morph.
+Stimulus Values let you declare typed state on a controller element via `data-*-value` attributes. When a value changes, whether from JavaScript or from Turbo morphing the DOM, Stimulus fires a `{name}ValueChanged` callback automatically. This replaces manual `getAttribute` calls, keeps state in HTML (the single source of truth), and ensures controllers re-initialize correctly after morph.
 
 **Incorrect (reading state from DOM attributes manually, missing morph updates):**
 
@@ -17,7 +17,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   connect() {
-    // BAD: manual attribute parsing — no type safety, no change detection
+    // BAD: manual attribute parsing, no type safety, no change detection
     this.deadline = new Date(this.element.dataset.deadline)
     this.warningThreshold = parseInt(this.element.dataset.warningMinutes) || 5
     this.start()
@@ -54,7 +54,7 @@ export default class extends Controller {
   }
 
   // Fires automatically when data-countdown-deadline-value changes
-  // — including after Turbo morph updates the attribute
+  //, including after Turbo morph updates the attribute
   deadlineValueChanged() {
     clearInterval(this.timer)
     this.start()
@@ -80,11 +80,11 @@ export default class extends Controller {
 ```
 
 ```erb
-<%# Values are set via data attributes — HTML is the source of truth %>
+<%# Values are set via data attributes, HTML is the source of truth %>
 <span data-controller="countdown"
       data-countdown-deadline-value="<%= @auction.ends_at.iso8601 %>"
       data-countdown-warning-minutes-value="10">
 </span>
 ```
 
-Reference: [Stimulus Reference — Values](https://stimulus.hotwired.dev/reference/values)
+Reference: [Stimulus Reference, Values](https://stimulus.hotwired.dev/reference/values)

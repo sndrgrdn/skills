@@ -12,7 +12,7 @@ Turbo Drive prefetches links on hover (`mouseenter`) by default, making subseque
 **Incorrect (no prefetch awareness, slow navigation):**
 
 ```erb
-<%# All links prefetch by default — including expensive ones %>
+<%# All links prefetch by default, including expensive ones %>
 <nav>
   <%= link_to "Projects", projects_path %>
   <%= link_to "Messages", messages_path %>
@@ -32,7 +32,7 @@ See also: [`perf-prefetch-strategic`](perf-prefetch-strategic.md) for granular s
 
 ```erb
 <nav>
-  <%# These prefetch on hover by default — instant navigation %>
+  <%# These prefetch on hover by default, instant navigation %>
   <%= link_to "Projects", projects_path %>
   <%= link_to "Messages", messages_path %>
 

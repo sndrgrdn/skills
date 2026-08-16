@@ -22,13 +22,13 @@ Concrete patterns for the most frequent Hotwire implementation tasks. Each entry
 
 **Approach:**
 - Wrap the form in a `<turbo-frame>`.
-- Return `422 Unprocessable Entity` for validation failures — Turbo re-renders the frame with errors.
-- Return `303 See Other` redirect on success — Turbo follows the redirect as a full visit.
+- Return `422 Unprocessable Entity` for validation failures, Turbo re-renders the frame with errors.
+- Return `303 See Other` redirect on success, Turbo follows the redirect as a full visit.
 - Use `turbo_frame_request?` in Rails to decide whether to render a full page or frame-scoped partial.
 
 **Key decisions:**
 - Frame ID must match between the form page and the error re-render.
-- Never return `200` for a failed form — Turbo treats `2xx` as success and follows redirects.
+- Never return `200` for a failed form, Turbo treats `2xx` as success and follows redirects.
 
 ## 2. Inline editing
 
@@ -41,7 +41,7 @@ Concrete patterns for the most frequent Hotwire implementation tasks. Each entry
 - Server returns the display view frame on successful PATCH.
 
 **Key decisions:**
-- Use `turbo:frame-render` (not `DOMContentLoaded`) for event binding — the input only exists after frame swap.
+- Use `turbo:frame-render` (not `DOMContentLoaded`) for event binding; the input only exists after frame swap.
 - Call `input.select()` on render for easy text replacement.
 - See `references/forms/2024-02-27-turbo-frames-inline-edit.md`.
 
@@ -70,7 +70,7 @@ Concrete patterns for the most frequent Hotwire implementation tasks. Each entry
 - Content frame loads the tab's content from the server.
 
 **Key decisions:**
-- Update active class on frame render events, not click — back/forward navigation must also update tabs.
+- Update active class on frame render events, not click, back/forward navigation must also update tabs.
 - Clean active state in `turbo:before-cache` to avoid stale tab highlighting in cached pages.
 - See `references/navigation/2023-06-20-turbo-frames-tabbed-navigation.md`.
 
@@ -96,7 +96,7 @@ Concrete patterns for the most frequent Hotwire implementation tasks. Each entry
 **Approach:**
 - Modal contains a `<turbo-frame>` that loads the form via `src` or link navigation.
 - Validation errors re-render inside the frame (return `422`).
-- On success, return `303` redirect — use `turbo:submit-end` to close the modal and optionally trigger a page refresh.
+- On success, return `303` redirect, use `turbo:submit-end` to close the modal and optionally trigger a page refresh.
 - Alternatively, return a Turbo Stream that updates the list and closes the modal.
 
 **Key decisions:**

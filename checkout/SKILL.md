@@ -9,8 +9,8 @@ Every remote repository you're asked to work with gets a stable local checkout a
 
 1. Run `bash scripts/checkout.sh <repo>` with the reference as given.
 2. Use the printed path for all searching, reading, and analysis.
-3. On later references to the same repo, run the script again — it refreshes the cache automatically.
+3. On later references to the same repo, run the script again; it refreshes the cache automatically.
 
-The script clones on first use (partial clone, `--filter=blob:none`), then fetches and fast-forwards on a throttle. Pass `--force-update` for a fresh copy now; `--help` lists every flag. If a refresh fails (offline), it returns the cached copy anyway — possibly stale.
+The script clones on first use (partial clone, `--filter=blob:none`), then fetches and fast-forwards on a throttle. Pass `--force-update` for a fresh copy now; `--help` lists every flag. If a refresh fails (offline), it returns the cached copy anyway, possibly stale.
 
 Don't edit inside the shared cache. Copy files out or create a worktree for task-specific changes.

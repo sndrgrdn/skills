@@ -70,7 +70,7 @@ export default class extends Controller {
       // Server morph will replace with the real message
       optimistic.remove()
     } else {
-      // Submission failed — show error and restore input
+      // Submission failed, show error and restore input
       optimistic.classList.replace("message--optimistic", "message--failed")
       optimistic.textContent += " (failed to send)"
       this.inputTarget.value = optimistic.textContent.replace(" (failed to send)", "")

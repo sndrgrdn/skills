@@ -24,7 +24,7 @@ Turbo Drive 8 prefetches links on hover by default (see [`drive-prefetch-links`]
   <%= link_to "Analytics", project_analytics_path(@project) %>
   <%= link_to "Export CSV", project_export_path(@project, format: :csv) %>
   <%= link_to "Audit Log", project_audit_log_path(@project) %>
-  <%# All links prefetch on hover — analytics and export hit the DB for nothing %>
+  <%# All links prefetch on hover, analytics and export hit the DB for nothing %>
 </nav>
 ```
 

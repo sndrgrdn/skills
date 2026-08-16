@@ -15,8 +15,8 @@ disable-model-invocation: true
 Implement Hotwire features with Turbo Drive, Turbo Frames, Turbo Streams, and Stimulus.
 
 Two kinds of reference material:
-- **Recipes** (`references/<domain>/`) — step-by-step implementation guides for concrete features.
-- **Rules** (`references/best-practices/`) — prescriptive Rails patterns, loaded when reviewing or choosing between approaches.
+- **Recipes** (`references/<domain>/`), step-by-step implementation guides for concrete features.
+- **Rules** (`references/best-practices/`), prescriptive Rails patterns, loaded when reviewing or choosing between approaches.
 
 Start with recipes when building. Cross-check rules when reviewing or deciding architecture.
 

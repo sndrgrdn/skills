@@ -47,10 +47,10 @@ Keep audit bullets brief and actionable:
 
 Return:
 
-1. **Assessment** — cautious confidence level: low/medium/high.
-2. **Tells** — pattern clusters with examples.
-3. **False-positive notes** — plausible human explanations.
-4. **Fixes** — highest-impact rewrites or checks.
+1. **Assessment**, cautious confidence level: low/medium/high.
+2. **Tells**, pattern clusters with examples.
+3. **False-positive notes**, plausible human explanations.
+4. **Fixes**, highest-impact rewrites or checks.
 
 Never return "this is definitely AI" unless the text includes explicit tool artifacts or known provenance.
 

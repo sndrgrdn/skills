@@ -13,7 +13,7 @@ Rails' `dom_id` helper generates unique, deterministic IDs from Active Record ob
 
 ```erb
 <%# app/views/messages/_message.html.erb %>
-<%# Every message gets the same frame ID — Turbo can't distinguish them %>
+<%# Every message gets the same frame ID, Turbo can't distinguish them %>
 <%= turbo_frame_tag "message" do %>
   <div class="message">
     <p><%= message.body %></p>
@@ -30,7 +30,7 @@ Rails' `dom_id` helper generates unique, deterministic IDs from Active Record ob
 <% end %>
 
 <%# app/views/messages/edit.html.erb %>
-<%# Must match the exact same format — easy to get wrong %>
+<%# Must match the exact same format, easy to get wrong %>
 <%= turbo_frame_tag "msg-#{@message.id}" do %>
   <%= render "form", message: @message %>
 <% end %>
@@ -40,7 +40,7 @@ Rails' `dom_id` helper generates unique, deterministic IDs from Active Record ob
 
 ```erb
 <%# app/views/messages/_message.html.erb %>
-<%# Passing the model directly calls dom_id — generates "message_42" %>
+<%# Passing the model directly calls dom_id, generates "message_42" %>
 <%= turbo_frame_tag message do %>
   <div class="message">
     <p><%= message.body %></p>
@@ -49,7 +49,7 @@ Rails' `dom_id` helper generates unique, deterministic IDs from Active Record ob
 <% end %>
 
 <%# app/views/messages/edit.html.erb %>
-<%# Matching frame — also uses dom_id via the model %>
+<%# Matching frame, also uses dom_id via the model %>
 <%= turbo_frame_tag @message do %>
   <%= render "form", message: @message %>
 <% end %>

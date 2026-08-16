@@ -7,7 +7,7 @@ tags: stim, actions, events, declarative
 
 ## Use Declarative Action Descriptors Over addEventListener
 
-Stimulus action descriptors (`data-action="event->controller#method"`) declaratively bind events to controller methods in HTML. Stimulus manages listener lifecycle automatically — adding on `connect` and removing on `disconnect`. Manual `addEventListener` calls in `connect()` require matching `removeEventListener` in `disconnect()` with bound function references, which is a common source of memory leaks in Turbo-navigated applications.
+Stimulus action descriptors (`data-action="event->controller#method"`) declaratively bind events to controller methods in HTML. Stimulus manages listener lifecycle automatically, adding on `connect` and removing on `disconnect`. Manual `addEventListener` calls in `connect()` require matching `removeEventListener` in `disconnect()` with bound function references, which is a common source of memory leaks in Turbo-navigated applications.
 
 **Incorrect (manual addEventListener in connect, easy to forget cleanup):**
 
@@ -31,7 +31,7 @@ export default class extends Controller {
   disconnect() {
     // Easy to forget, or to miss one of the listeners
     document.removeEventListener("keydown", this.handleKeydown)
-    // The anonymous functions above can never be removed — memory leak
+    // The anonymous functions above can never be removed, memory leak
   }
 }
 ```
@@ -56,7 +56,7 @@ export default class extends Controller {
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  // No connect/disconnect needed — Stimulus manages all listeners
+  // No connect/disconnect needed, Stimulus manages all listeners
 
   handleKeydown(event) {
     if (event.key === "/" && !event.metaKey) {
@@ -81,7 +81,7 @@ export default class extends Controller {
 ```
 
 **When NOT to use this pattern:**
-- For events on elements created dynamically after `connect()` — use event delegation on a parent target instead
-- For third-party library callbacks that don't fire DOM events — manual wiring in `connect()` with cleanup in `disconnect()` is required
+- For events on elements created dynamically after `connect()`, use event delegation on a parent target instead
+- For third-party library callbacks that don't fire DOM events, manual wiring in `connect()` with cleanup in `disconnect()` is required
 
-Reference: [Stimulus Reference — Actions](https://stimulus.hotwired.dev/reference/actions)
+Reference: [Stimulus Reference, Actions](https://stimulus.hotwired.dev/reference/actions)

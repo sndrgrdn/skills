@@ -336,18 +336,18 @@ expect(el.textContent).toContain('10')
 
 **Extract business logic for pure unit tests:**
 ```javascript
-// playlist.js — pure logic, no DOM
+// playlist.js, pure logic, no DOM
 export class PlayableList {
   skipForward() { /* ... */ }
 }
 
-// playlist_controller.js — thin adapter
+// playlist_controller.js, thin adapter
 export default class extends Controller {
   connect() { this.list = new PlayableList() }
   next() { this.list.skipForward(); this.render() }
 }
 
-// Test PlayableList directly — no Stimulus setup needed
+// Test PlayableList directly, no Stimulus setup needed
 ```
 
 ---

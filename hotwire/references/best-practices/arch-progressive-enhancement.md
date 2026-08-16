@@ -41,7 +41,7 @@ end
 **Correct (using the simplest tool: HTML first, then CSS, then Stimulus, then Turbo):**
 
 ```erb
-<%# Step 1: Pure HTML — no JavaScript needed for a simple disclosure %>
+<%# Step 1: Pure HTML, no JavaScript needed for a simple disclosure %>
 <details>
   <summary>Show Details</summary>
   <p><%= @project.description %></p>

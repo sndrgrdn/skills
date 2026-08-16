@@ -43,7 +43,7 @@ export default class extends Controller {
 **Correct (data-turbo-confirm with native or custom modal):**
 
 ```erb
-<%# Native browser confirm — works out of the box %>
+<%# Native browser confirm, works out of the box %>
 <%= button_to "Delete", project_path(project), method: :delete,
     form: { data: { turbo_confirm: "Delete this project? This cannot be undone." } } %>
 
@@ -85,4 +85,4 @@ Turbo.setConfirmMethod((message, element) => {
 </dialog>
 ```
 
-Reference: [Turbo Handbook — Confirmation](https://turbo.hotwired.dev/handbook/drive#requiring-confirmation-for-a-visit)
+Reference: [Turbo Handbook, Confirmation](https://turbo.hotwired.dev/handbook/drive#requiring-confirmation-for-a-visit)

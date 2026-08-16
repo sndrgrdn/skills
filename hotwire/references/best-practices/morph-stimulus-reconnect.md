@@ -10,7 +10,7 @@ tags: morph, stimulus, controllers, lifecycle
 When Turbo morphs the DOM, it patches elements in place rather than removing and re-inserting them. This means Stimulus controllers attached to morphed elements may not receive `disconnect`/`connect` lifecycle callbacks, leaving stale state (expired timers, orphaned event listeners, outdated data).
 
 **Decision tree for morph handling:**
-1. **If your state is in Stimulus values** (data attributes): use `valueChanged` callbacks — Stimulus detects attribute changes from morphing automatically.
+1. **If your state is in Stimulus values** (data attributes): use `valueChanged` callbacks, Stimulus detects attribute changes from morphing automatically.
 2. **If your state is NOT in values** (timers, third-party library instances, manual event listeners): listen to `turbo:morph-element` to detect when your element has been patched and re-initialize.
 
 **Incorrect (Stimulus controller state lost after morph):**
@@ -51,7 +51,7 @@ export default class extends Controller {
 
 **Correct (valueChanged callback for value-based state, turbo:morph-element for non-value state):**
 
-Approach 1 — valueChanged callback (preferred when state is in values):
+Approach 1, valueChanged callback (preferred when state is in values):
 
 ```javascript
 // app/javascript/controllers/countdown_controller.js
@@ -69,7 +69,7 @@ export default class extends Controller {
   }
 
   // Stimulus fires this when the data-countdown-deadline-value attribute
-  // changes — including when Turbo morphs new attribute values onto the element
+  // changes, including when Turbo morphs new attribute values onto the element
   deadlineValueChanged() {
     clearInterval(this.timer);
     this.startCountdown();
@@ -90,7 +90,7 @@ export default class extends Controller {
 }
 ```
 
-Approach 2 — turbo:morph-element (for state not captured in values):
+Approach 2, turbo:morph-element (for state not captured in values):
 
 ```javascript
 // app/javascript/controllers/chart_controller.js
@@ -100,7 +100,7 @@ export default class extends Controller {
   static values = { endpoint: String };
 
   connect() {
-    // Third-party library instance — not stored in Stimulus values
+    // Third-party library instance, not stored in Stimulus values
     this.chart = new ChartLibrary(this.element, { endpoint: this.endpointValue });
     this.element.addEventListener("turbo:morph-element", this.handleMorph);
   }

@@ -65,4 +65,4 @@ class MessageTest < ActiveSupport::TestCase
 end
 ```
 
-Reference: [Turbo Broadcastable TestHelper — turbo-rails](https://github.com/hotwired/turbo-rails)
+Reference: [Turbo Broadcastable TestHelper, turbo-rails](https://github.com/hotwired/turbo-rails)

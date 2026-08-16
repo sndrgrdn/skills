@@ -35,7 +35,7 @@ When a broadcast triggers a page refresh (see [`morph-enable-page-refresh`](morp
 <%# app/views/layouts/application.html.erb %>
 <html>
 <head>
-  <%# Preserve scroll globally — most pages should keep position %>
+  <%# Preserve scroll globally, most pages should keep position %>
   <%= turbo_refreshes_with method: :morph, scroll: :preserve %>
 </head>
 <body>

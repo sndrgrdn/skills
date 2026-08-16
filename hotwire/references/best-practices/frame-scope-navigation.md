@@ -18,7 +18,7 @@ Links and forms inside a Turbo Frame are scoped to that frame by default -- the 
     <p><%= comment.body %></p>
 
     <%# This link tries to navigate inside the comment frame,
-        but the show page won't have a matching frame — shows nothing %>
+        but the show page won't have a matching frame, shows nothing %>
     <%= link_to comment.author.name, user_path(comment.author) %>
 
     <%= link_to "Edit", edit_comment_path(comment) %>
@@ -34,11 +34,11 @@ Links and forms inside a Turbo Frame are scoped to that frame by default -- the 
   <div class="comment">
     <p><%= comment.body %></p>
 
-    <%# Break out of the frame — navigate the full page %>
+    <%# Break out of the frame, navigate the full page %>
     <%= link_to comment.author.name, user_path(comment.author),
         data: { turbo_frame: "_top" } %>
 
-    <%# Stays within this frame — edit form replaces comment content %>
+    <%# Stays within this frame, edit form replaces comment content %>
     <%= link_to "Edit", edit_comment_path(comment) %>
   </div>
 <% end %>

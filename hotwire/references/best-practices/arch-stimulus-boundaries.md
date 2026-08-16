@@ -51,7 +51,7 @@ export default class extends Controller {
 **Correct (Stimulus for toggling visibility, Turbo Frame for loading content from server):**
 
 ```erb
-<%# Server renders the board — Turbo Frame handles loading/filtering %>
+<%# Server renders the board, Turbo Frame handles loading/filtering %>
 <%= form_with url: project_tasks_path(@project), method: :get,
     data: { turbo_frame: "task_board" } do |f| %>
   <%= f.select :filter, ["All", "To Do", "In Progress", "Done"],

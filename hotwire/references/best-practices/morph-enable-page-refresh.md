@@ -17,7 +17,7 @@ By default, Turbo replaces the entire `<body>` on page refreshes, which destroys
 <head>
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
-  <%# No morph configuration — Turbo replaces the entire body %>
+  <%# No morph configuration, Turbo replaces the entire body %>
   <%= stylesheet_link_tag "application" %>
   <%= javascript_importmap_tags %>
 </head>

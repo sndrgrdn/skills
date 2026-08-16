@@ -302,5 +302,5 @@ Both output `application.css` to `app/assets/builds/`. Rename one output in `pac
 ### CSS without Node (importmap apps)
 
 Use standalone gems instead of cssbundling-rails:
-- `tailwindcss-rails` — standalone Tailwind binary, no Node
-- `dartsass-rails` — standalone Dart Sass binary, no Node
+- `tailwindcss-rails`, standalone Tailwind binary, no Node
+- `dartsass-rails`, standalone Dart Sass binary, no Node

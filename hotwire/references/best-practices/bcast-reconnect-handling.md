@@ -7,9 +7,9 @@ tags: bcast, websocket, reconnection, resilience
 
 ## Handle WebSocket Disconnection and Reconnection
 
-ActionCable reconnects automatically after a WebSocket disconnection, but any broadcasts sent during the downtime are lost — the client never receives them. After reconnection, the page displays stale data until the next broadcast or manual refresh. Detecting disconnection state and triggering a page refresh on reconnection ensures users always see current data.
+ActionCable reconnects automatically after a WebSocket disconnection, but any broadcasts sent during the downtime are lost; the client never receives them. After reconnection, the page displays stale data until the next broadcast or manual refresh. Detecting disconnection state and triggering a page refresh on reconnection ensures users always see current data.
 
-**Incorrect (no awareness of WebSocket state — stale data after reconnection):**
+**Incorrect (no awareness of WebSocket state, stale data after reconnection):**
 
 ```erb
 <%# app/views/projects/show.html.erb %>
@@ -75,7 +75,7 @@ export default class extends Controller {
 ```
 
 **When NOT to use this pattern:**
-- On pages without real-time broadcasts — the overhead of monitoring is unnecessary
-- When using `broadcasts_refreshes` with frequent updates — the next broadcast will naturally catch up
+- On pages without real-time broadcasts, the overhead of monitoring is unnecessary
+- When using `broadcasts_refreshes` with frequent updates, the next broadcast will naturally catch up
 
-Reference: [ActionCable Connection Monitor — Rails](https://github.com/rails/rails/blob/main/actioncable/app/javascript/action_cable/connection_monitor.js)
+Reference: [ActionCable Connection Monitor, Rails](https://github.com/rails/rails/blob/main/actioncable/app/javascript/action_cable/connection_monitor.js)

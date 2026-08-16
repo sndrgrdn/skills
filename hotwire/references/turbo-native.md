@@ -25,8 +25,8 @@ Hotwire Native wraps a **single shared WKWebView (iOS) / WebView (Android)** in 
 5. Content rendered; screenshot hidden
 
 **Visit types:**
-- **Cold boot** — first visit or after reload; full page load. Slow.
-- **JavaScript visit** — subsequent Turbo-driven navigation; only fetches HTML, replaces `<body>`. Fast.
+- **Cold boot**, first visit or after reload; full page load. Slow.
+- **JavaScript visit**, subsequent Turbo-driven navigation; only fetches HTML, replaces `<body>`. Fast.
 
 ---
 
@@ -211,9 +211,9 @@ A JSON file controlling routing without an app release. Loaded locally (bundled)
 | `context` | ✓ | ✓ | `default`, `modal` |
 | `presentation` | ✓ | ✓ | `default`, `push`, `pop`, `replace`, `replace_root`, `clear_all`, `refresh`, `none` |
 | `pull_to_refresh_enabled` | ✓ | ✓ | `true`, `false` |
-| `view_controller` | ✓ | — | String matching `PathConfigurationIdentifiable` |
-| `uri` | — | ✓ | Deep link URI matching `@HotwireDestinationDeepLink` |
-| `modal_style` | ✓ | — | `large`, `medium`, `full`, `page_sheet`, `form_sheet` |
+| `view_controller` | ✓ |, | String matching `PathConfigurationIdentifiable` |
+| `uri` |, | ✓ | Deep link URI matching `@HotwireDestinationDeepLink` |
+| `modal_style` | ✓ |, | `large`, `medium`, `full`, `page_sheet`, `form_sheet` |
 
 **Versioning:** Use platform-specific paths (`ios_v1.json`, `android_v1.json`). Bump to `_v2.json` for breaking changes.
 
@@ -358,7 +358,7 @@ tabBarController.load([
 ### Debug logging
 
 ```swift
-Hotwire.config.debugLoggingEnabled = true  // iOS — never in production
+Hotwire.config.debugLoggingEnabled = true  // iOS, never in production
 ```
 ```kotlin
 Hotwire.config.debugLoggingEnabled = true   // Android

@@ -7,7 +7,7 @@ tags: stim, outlets, cross-controller, coordination
 
 ## Use Outlets for Cross-Controller Communication
 
-When Stimulus controllers need to coordinate — a search controller filtering a results list, a modal controller closing from a form controller — the temptation is to use `document.querySelector` or dispatch custom DOM events. Outlets provide a declarative, testable way to reference other controller instances directly. Stimulus manages the lifecycle automatically: outlet callbacks fire when connected/disconnected, preventing stale references.
+When Stimulus controllers need to coordinate, a search controller filtering a results list, a modal controller closing from a form controller; the temptation is to use `document.querySelector` or dispatch custom DOM events. Outlets provide a declarative, testable way to reference other controller instances directly. Stimulus manages the lifecycle automatically: outlet callbacks fire when connected/disconnected, preventing stale references.
 
 **Incorrect (querying the DOM or dispatching global events to coordinate controllers):**
 
@@ -60,20 +60,20 @@ export default class extends Controller {
 
   filter() {
     const query = this.element.querySelector("input").value
-    // Outlet reference is managed by Stimulus — always current
+    // Outlet reference is managed by Stimulus, always current
     this.resultsOutlet.updateFilter(query)
   }
 
   // Optional: react when the results controller connects/disconnects
   resultsOutletConnected(outlet, element) {
-    // Results are ready — enable the search input
+    // Results are ready, enable the search input
     this.element.querySelector("input").disabled = false
   }
 }
 ```
 
 **When NOT to use this pattern:**
-- For one-to-many communication (one controller to many listeners) — use Stimulus `dispatch` with custom events instead
-- When controllers are on different pages — outlets only work within the same DOM tree
+- For one-to-many communication (one controller to many listeners), use Stimulus `dispatch` with custom events instead
+- When controllers are on different pages, outlets only work within the same DOM tree
 
-Reference: [Stimulus Reference — Outlets](https://stimulus.hotwired.dev/reference/outlets)
+Reference: [Stimulus Reference, Outlets](https://stimulus.hotwired.dev/reference/outlets)

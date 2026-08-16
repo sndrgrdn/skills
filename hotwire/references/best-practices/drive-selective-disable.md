@@ -12,7 +12,7 @@ Turbo Drive intercepts all link clicks and form submissions by default, which br
 **Incorrect (Turbo intercepting external redirects and payment forms):**
 
 ```erb
-<%# OAuth link intercepted by Turbo — redirect fails silently %>
+<%# OAuth link intercepted by Turbo, redirect fails silently %>
 <%= link_to "Sign in with Google",
     user_google_oauth2_omniauth_authorize_path %>
 

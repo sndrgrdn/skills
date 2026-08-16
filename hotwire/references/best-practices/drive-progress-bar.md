@@ -12,7 +12,7 @@ Turbo shows a thin progress bar at the top of the page when navigation takes lon
 **Incorrect (no visual feedback on slow navigations):**
 
 ```erb
-<%# No progress bar customization — default 500ms delay %>
+<%# No progress bar customization, default 500ms delay %>
 <%# Users see nothing for 500ms, then a barely visible bar %>
 
 <style>
@@ -21,7 +21,7 @@ Turbo shows a thin progress bar at the top of the page when navigation takes lon
 ```
 
 ```javascript
-// No configuration — some teams disable it entirely by mistake
+// No configuration, some teams disable it entirely by mistake
 import "@hotwired/turbo-rails"
 
 // This removes all loading feedback
@@ -34,7 +34,7 @@ Turbo.setProgressBarDelay(999999)
 // app/javascript/application.js
 import "@hotwired/turbo-rails"
 
-// Show progress bar after 300ms — fast enough to feel responsive
+// Show progress bar after 300ms, fast enough to feel responsive
 // without flickering on quick navigations
 Turbo.setProgressBarDelay(300)
 ```

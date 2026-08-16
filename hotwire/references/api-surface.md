@@ -28,15 +28,15 @@ Intercepts link clicks and form submissions, replacing full page loads with fetc
 | Event | Fires when | `event.detail` |
 |---|---|---|
 | `turbo:click` | Turbo-eligible link clicked | `{ url }` |
-| `turbo:before-visit` | Before navigation starts | `{ url }` — cancelable |
+| `turbo:before-visit` | Before navigation starts | `{ url }`, cancelable |
 | `turbo:visit` | Visit starts | `{ url, action }` |
-| `turbo:before-render` | Before new body is rendered | `{ newBody, render }` — cancelable, overridable |
+| `turbo:before-render` | Before new body is rendered | `{ newBody, render }`, cancelable, overridable |
 | `turbo:render` | After rendering | `{ renderMethod }` (`"replace"` or `"morph"`) |
 | `turbo:load` | Page fully loaded (initial + navigations) | `{ url, timing }` |
-| `turbo:before-cache` | Before page is written to cache | — |
+| `turbo:before-cache` | Before page is written to cache |, |
 | `turbo:submit-start` | Form submission begins | `{ formSubmission }` |
 | `turbo:submit-end` | Form submission completes | `{ formSubmission }` with `success` flag |
-| `turbo:before-fetch-request` | Before any Turbo fetch | `{ fetchOptions }` — modify headers here |
+| `turbo:before-fetch-request` | Before any Turbo fetch | `{ fetchOptions }`, modify headers here |
 | `turbo:before-fetch-response` | After fetch, before processing | `{ fetchResponse }` |
 | `turbo:fetch-request-error` | Network error during fetch | `{ request, error }` |
 
@@ -59,10 +59,10 @@ Scope navigation and updates to a `<turbo-frame>` region.
 
 | Attribute | Effect |
 |---|---|
-| `id` (required) | Frame identity — response must include matching `<turbo-frame id>` |
+| `id` (required) | Frame identity, response must include matching `<turbo-frame id>` |
 | `src` | Lazy-loads content from URL on connect |
 | `loading="lazy"` | Defers `src` load until frame is visible (IntersectionObserver) |
-| `target="_top"` | Breaks out of frame — navigates full page |
+| `target="_top"` | Breaks out of frame, navigates full page |
 | `data-turbo-action="advance"` | Pushes frame navigations into browser history |
 | `disabled` | Prevents frame from loading or navigating |
 | `autoscroll` | Scrolls frame into view after load |
@@ -73,7 +73,7 @@ Scope navigation and updates to a `<turbo-frame>` region.
 
 | Event | Fires when |
 |---|---|
-| `turbo:before-frame-render` | Before frame content is rendered — cancelable, render overridable |
+| `turbo:before-frame-render` | Before frame content is rendered, cancelable, render overridable |
 | `turbo:frame-render` | After frame content is rendered |
 | `turbo:frame-load` | After frame navigation completes |
 | `turbo:frame-missing` | Frame response doesn't contain matching frame ID |
@@ -112,14 +112,14 @@ Server-pushed DOM mutations via 8 built-in actions (+ custom actions).
 | `action` | Action name (built-in or custom) |
 | `target` | ID of single target element |
 | `targets` | CSS selector for multiple targets |
-| `method` | `morph` — use morphing for replace/update instead of full swap |
+| `method` | `morph`, use morphing for replace/update instead of full swap |
 
 ### Delivery methods
 
-1. **Inline `<turbo-stream>` in response body** — MIME type `text/vnd.turbo-stream.html`
+1. **Inline `<turbo-stream>` in response body**, MIME type `text/vnd.turbo-stream.html`
 2. **WebSocket** via Action Cable / `turbo_stream_from` helper
 3. **SSE** via `<turbo-stream-source>` element with `src` pointing to SSE endpoint
-4. **Client-side injection** — append `<turbo-stream>` elements to DOM programmatically
+4. **Client-side injection**, append `<turbo-stream>` elements to DOM programmatically
 
 ### Custom stream actions
 

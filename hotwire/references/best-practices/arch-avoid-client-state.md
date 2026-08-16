@@ -27,7 +27,7 @@ export default class extends Controller {
     const data = await response.json()
     this.projectsValue = data.projects
 
-    // Building HTML in JavaScript — defeats the purpose of Hotwire
+    // Building HTML in JavaScript, defeats the purpose of Hotwire
     this.element.innerHTML = this.projectsValue.map(project => `
       <div class="project-card">
         <h3>${project.name}</h3>
@@ -67,7 +67,7 @@ export default class extends Controller {
 class ProjectsController < ApplicationController
   def index
     @projects = Project.filter_by(params[:filter]).page(params[:page])
-    # Rails automatically renders HTML — no JSON API needed
+    # Rails automatically renders HTML, no JSON API needed
     # Turbo Frame scopes the response to just the project list
   end
 end

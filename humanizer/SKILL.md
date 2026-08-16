@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Humanizer
 
-Find **tells** — AI-generated patterns that signal machine authorship — and rewrite them into natural prose. Preserve meaning, restore specificity, match venue.
+Find **tells**, AI-generated patterns that signal machine authorship, and rewrite them into natural prose. Preserve meaning, restore specificity, match venue.
 
 ## Workflow
 
@@ -92,6 +92,6 @@ Each pattern has its own reference with signals, false positives, rewrite strate
 ## Output
 
 1. **Draft rewrite**
-2. **Anti-AI audit** — remaining tells or risks
+2. **Anti-AI audit**, remaining tells or risks
 3. **Final rewrite**
-4. **Changes made** — by pattern class, with pattern numbers
+4. **Changes made**, by pattern class, with pattern numbers

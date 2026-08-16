@@ -50,6 +50,6 @@ The `turbo_stream_from` helper subscribes the client to an Action Cable channel 
 <%= turbo_stream_from current_user, :notifications %>
 
 <%# The signed stream name prevents other users from subscribing to this channel.
-    turbo_stream_from handles signing automatically — never construct
+    turbo_stream_from handles signing automatically, never construct
     channel names manually. %>
 ```

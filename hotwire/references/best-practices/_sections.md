@@ -8,7 +8,7 @@ The section ID (in parentheses) is the filename prefix used to group rules.
 ## 1. Navigation & Drive (drive)
 
 **Impact:** CRITICAL
-**Description:** Turbo Drive is the foundation of every Hotwire app — it intercepts all clicks and form submissions, so misconfiguration cascades into broken Frames, Streams, and 5× slower navigation (1200ms full reload vs 250ms Drive visit).
+**Description:** Turbo Drive is the foundation of every Hotwire app; it intercepts all clicks and form submissions, so misconfiguration cascades into broken Frames, Streams, and 5× slower navigation (1200ms full reload vs 250ms Drive visit).
 
 ## 2. Turbo Frames (frame)
 
@@ -23,12 +23,12 @@ The section ID (in parentheses) is the filename prefix used to group rules.
 ## 4. Broadcasting & Real-Time (bcast)
 
 **Impact:** HIGH
-**Description:** N+1 broadcasts are the #1 Hotwire production performance killer — 1 create can trigger 100 broadcasts × 100 partial renders, degrading response times by orders of magnitude.
+**Description:** N+1 broadcasts are the #1 Hotwire production performance killer, 1 create can trigger 100 broadcasts × 100 partial renders, degrading response times by orders of magnitude.
 
 ## 5. Morphing & Page Refresh (morph)
 
 **Impact:** HIGH
-**Description:** Turbo 8 morphing updates only changed DOM nodes (23ms vs 180ms full replace — 7.8× faster), but requires explicit scroll preservation and permanent element configuration to avoid state loss.
+**Description:** Turbo 8 morphing updates only changed DOM nodes (23ms vs 180ms full replace, 7.8× faster), but requires explicit scroll preservation and permanent element configuration to avoid state loss.
 
 ## 6. Performance Optimization (perf)
 
@@ -38,7 +38,7 @@ The section ID (in parentheses) is the filename prefix used to group rules.
 ## 7. Stimulus Patterns (stim)
 
 **Impact:** MEDIUM-HIGH
-**Description:** Stimulus controllers are the "sprinkle of JavaScript" in Hotwire — small, reusable behaviors that enhance server-rendered HTML. Misusing Stimulus to manage state, fetch data, or build DOM recreates the SPA problems Hotwire was designed to eliminate.
+**Description:** Stimulus controllers are the "sprinkle of JavaScript" in Hotwire, small, reusable behaviors that enhance server-rendered HTML. Misusing Stimulus to manage state, fetch data, or build DOM recreates the SPA problems Hotwire was designed to eliminate.
 
 ## 8. Architecture Decisions (arch)
 
