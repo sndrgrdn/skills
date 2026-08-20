@@ -1,6 +1,7 @@
 ---
-name: subagent
-description: Dispatch a subagent for one self-contained task. Use when work should run in the background, or another skill tells you to dispatch a subagent.
+name: pi-subagent
+description: Dispatch a Pi subagent for one self-contained task. Use when work should run in the background, or another skill tells you to dispatch a subagent.
+disable-model-invocation: true
 ---
 
 # Subagent
@@ -12,7 +13,7 @@ description: Dispatch a subagent for one self-contained task. Use when work shou
    ```bash
    pi -p --mode json --no-session --provider "$PI_PROVIDER" --model "$PI_MODEL" --thinking <level> @<brief-file>
    ```
-   `<brief-file>` is the path from step 1; `<level>` is off, minimal, low, medium, high, xhigh, or max, use `max` for reasoning-heavy work (design analysis, review judging), `low` or `minimal` for mechanical tasks (file search, formatting). Record the pid and a total time budget, generous for the task. The bash tool exports `$PI_PROVIDER` and `$PI_MODEL` into every command; a bare `pi -p` ignores them and resolves from the settings.json defaults or the first configured model.
+   `<brief-file>` is the path from step 1; `<level>` is off, minimal, low, medium, high, xhigh, or max, use `high` for reasoning-heavy work (design analysis, review judging), `low` or `minimal` for mechanical tasks (file search, formatting). Record the pid and a total time budget, generous for the task. The bash tool exports `$PI_PROVIDER` and `$PI_MODEL` into every command; a bare `pi -p` ignores them and resolves from the settings.json defaults or the first configured model.
 
 **The caller owns monitoring.** A background subagent never pings back, no callback, no notification; it runs until checked. Watch it: check within the first minute for startup failures, then periodically (`bash_status <pid> wait_seconds=0` streams live progress), and block as the budget approaches (Collect step 1). The pid and budget from step 2 are the caller's handles for that watch.
 
