@@ -1,225 +1,138 @@
 ---
 name: create-pr
-description: Open or update a GitHub pull request for the current branch — use when asked to create a PR, open a pull request, push and PR, or submit a PR.
+description: Create or update GitHub pull requests for the current branch or an existing branch stack. Use when the user asks to open a PR, publish a stack, or push changes and open PRs.
 ---
 
-# Pull Request Creation
+# Create Pull Requests
 
-## Core Rules
+Run this workflow in the main session. Keep intent, confirmation, commit, push, and PR publication in the same context.
 
-1. **NEVER dispatch a sub-agent.** Run every step of this workflow directly in the main session. Sub-agents lose the session's intent, cannot reliably see the diff in context, and can repeat questions already answered. This rule overrides any general preference for parallelism, delegation, or context-window savings.
+A request to create a PR authorizes the push needed to create it. An earlier instruction to wait, not push, or not create a PR remains a hard stop until the user explicitly withdraws it.
 
-2. **NEVER push past an explicit user rejection.** Before running any step, scan the recent session for signals like "don't push anything yet", "don't make a PR", "hold off on the PR", "not ready for a PR", "wait before opening a PR". If you see one, STOP — do not run `gh pr create`, do not push. Surface what the user said and ask whether they have changed their mind, then wait. A user rejection in the same session is a hard halt, not a hint.
+This skill requires Bash, Git, GitHub CLI (`gh`), `jq`, and an authenticated GitHub session.
 
-3. **NEVER fabricate intent.** Most users say "do X" without explaining why. When intent is missing (which is usually the case), ASK before creating the PR.
+## 1. Establish intent
 
-4. **NEVER list files.** No "Files Updated" or "Files Changed" sections. GitHub shows this already.
+Most sessions will not include intent. A request such as “add a button” states the change, not the problem it solves or why it is needed.
 
-5. **NEVER narrate code changes.** Don't explain what the code does in human language. The diff shows the implementation.
+Find both parts in the conversation:
 
-6. **NEVER speculate on risks.** Only include risks if the user explicitly mentioned them.
+- the problem this change solves
+- why the change is needed
 
-7. **NEVER include a "Test plan" section.** Omit any test plan, test checklist, or testing instructions from PR descriptions.
+If either part is missing, ask:
 
-8. **NEVER call `gh pr create` without first running `check-pr-context.sh`.** Step 1.5 (`check-pr-context.sh`) must appear in the command trace **before** `gh pr create` — it is the authoritative source for repo visibility, branch state, and default branch. Never infer its output from prompt text, prior turns, session context, or your own judgement — the script is cheap, deterministic, and non-substitutable. "The user said the repo is private" / "I already know the branch name" / "the intent is obvious" are NOT reasons to skip. If `gh pr create` runs without the script running first, restart the workflow at step 1.5.
+> Before creating this PR, I need to understand the intent behind this change.
+>
+> What problem does this solve, and why is this change needed?
 
-## Workflow
+Continue when the answer supplies the PR's `Why?` without guesswork.
 
-Execute all steps below directly in this session. Per Core Rules 1 and 8, do not delegate, and run the context script inline before any `gh pr create`.
+## 2. Read repository context
 
-### 1. Look for intent in session history
-
-Did the user explicitly state:
-- What problem they're solving?
-- Why they need this change?
-
-**"Do X" is not intent.** "Add button to page" describes WHAT, not WHY.
-
-### 1.5. Check repo context (once, reuse everywhere)
-
-**Always run this script** — even if the user mentions visibility or branch name in their message. The script is the authoritative source; never infer from prompt text.
-
-Resolve `scripts/check-pr-context.sh` relative to the directory that contains this `SKILL.md`. Run it once early and reuse the results for steps 2, 2.5, 3, and 3.6:
+Resolve `scripts/check-pr-context.sh` relative to this `SKILL.md`, then run it once from the target repository:
 
 ```bash
 bash "<skill-directory>/scripts/check-pr-context.sh"
 ```
 
-Returns JSON:
+Run the script during the current workflow before any `gh pr create`. Retain and reuse its result rather than inferring `repo`, `visibility`, `branch`, `already_pushed`, or `default_branch`. Pass `--repo "<repo>"` explicitly on every `gh pr` command, so the repository the visibility gate was computed for is the one published to.
 
-```json
-{
-  "repo": "your-org/your-repo",
-  "visibility": "PUBLIC",
-  "branch": "fix/typo",
-  "already_pushed": false,
-  "default_branch": "main"
-}
-```
+Stop when `visibility` is `UNKNOWN`; publication safety cannot be selected without it. When `visibility` is `PUBLIC`, read [`public-repository.md`](public-repository.md) and apply every gate it defines.
 
-Use these values throughout the workflow:
-- `visibility` is `PUBLIC`, `PRIVATE`, or `INTERNAL`
-- `PUBLIC` → apply public-repo safeguards in steps 2, 2.5, and 3.6
-- `PRIVATE` or `INTERNAL` → skip public-repo safeguards
-- `already_pushed` → if `true`, skip branch rename in step 2 (renaming after push is disruptive)
-- `default_branch` → starting point for base branch in step 3 (adjust if upstream tracking differs)
+Use `default_branch` as the base unless the user named another base. Ask when the intended base is unclear.
 
-Do NOT query `isPrivate` — its polarity inverts the natural-language framing and has caused repeat misreads where `isPrivate=true` was treated as "public".
+## 3. Select normal or stacked publication
 
-### 2. Ask for intent (usually needed)
+Run `gh stack view --json` and branch on its exit status:
 
-Most sessions won't have intent. Ask:
+- Exit 0: the current branch belongs to a stack. Read [`stacked-pull-requests.md`](stacked-pull-requests.md).
+- Exit 2: no local stack exists. Continue with a normal PR unless the user explicitly requested a stack.
+- Command unavailable: for a requested stack, explain that the official `github/gh-stack` extension is required and get approval before installing it.
+- Any other failure: read stderr and stop with the actionable error.
 
-```
-Before creating this PR, I need to understand the intent behind this change.
+A stack request also uses [`stacked-pull-requests.md`](stacked-pull-requests.md). Its workflow replaces the remaining normal-PR steps; return its ordered PR URLs on completion. Normal PR publication continues below only when no stack workflow applies.
 
-What problem does this solve, and why is this change needed?
-```
+## 4. Validate the normal PR
 
-### 2.5. Check for auto-generated branch names
+Inspect committed, staged, unstaged, and untracked work:
 
-Using `branch` from step 1.5: if it looks meaningless, random, or unrelated to the intent, suggest a descriptive rename and ask the user to confirm. Skip if `already_pushed` is `true` — renaming after push is disruptive.
-
-Prefix the new name with your GitHub login (`gh api user -q .login`) if that succeeds; otherwise omit the prefix. Rename with `git branch -m <new-name>`.
-
-**Public repo branch names:** If `visibility` is `PUBLIC` (from step 1.5), also verify the branch name doesn't contain internal identifiers — internal IDs, customer names, private project codenames, or team-specific references. If it does, suggest a sanitized rename.
-
-### 3. Commit and push if needed
-
-If changes aren't committed and pushed, do that first. Always push with `-u` to set upstream tracking: `git push -u origin <branch>`.
-
-**Public repo commit messages:** If the repo is public (per step 1.5), before pushing review all commit messages on the branch (`git log --oneline <base-branch>..HEAD`). If any commit message contains internal identifiers, customer data, internal URLs, or team-specific references, warn the user and suggest amending or squashing before pushing — once pushed to a public repo, commit messages are permanently visible even if force-pushed later (cached by bots, mirrored, or already fetched).
-
-### 3.5. Determine the base branch
-
-Start with `default_branch` from step 1.5. Override it if the current branch has an upstream tracking branch that differs: `git rev-parse --abbrev-ref @{upstream} 2>/dev/null`. If the upstream tracks a different remote branch (e.g., `develop` instead of `main`), use that as the base. If uncertain, ask the user. Always pass `--base <branch>` to `gh pr create`.
-
-### 3.55. Validate diff matches intent
-
-Before writing the PR description, review the actual diff to ensure it matches the user's intent:
-
-1. Run `git diff <base-branch>...HEAD --stat` to see all files changed
-2. Compare the changed files against what the user discussed in this session
-3. If there are **unexpected files** — files changed that weren't part of the conversation — STOP and warn the user:
-
-```
-I notice the diff includes changes to files we didn't discuss:
-- <unexpected file 1>
-- <unexpected file 2>
-
-These may be leftover changes from a previous session. Should I:
-1. Proceed with all changes in one PR
-2. Help you split these into separate commits/PRs
-3. Exclude them (you'll need to stash or reset those files)
-```
-
-4. Only proceed once the user has confirmed the diff is intentional
-5. When writing the PR description, base the "How?" section on the **actual diff alone** — the conversation context informs Why, never How
-
-### 3.6. Public repo description and title safeguards
-
-If the repo is **public** (per step 1.5), the PR description will be visible to anyone on the internet without authentication. Apply these rules:
-
-- **No internal URLs** — internal dashboards (observability, error tracking, metrics), private wikis, internal docs, admin tools, or any company-internal domains
-- **No internal identifiers** — team names, group names, employee names, internal IDs, private project codenames
-- **No internal process details** — references to internal tools, deployment pipelines, feature flag names, or issue links from private repos
-- **No customer data** — customer names, account IDs, user IDs, or anything that could identify a customer
-- **Keep it general** — describe the *what* and *why* in terms any external contributor could understand
-
-These rules apply to the **PR title as well** — the title is even more visible than the description (it appears in search engine results, GitHub notification emails, and RSS feeds). Keep titles generic and free of internal context.
-
-If the user's stated intent contains sensitive details, rephrase it in generic terms. Ask the user to confirm the sanitized description and title before creating the PR.
-
-**Always print this warning to the user before creating the PR on a public repo:**
-
-```
-WARNING: This repository is PUBLIC. The PR title, description, comments,
-commits, and full diff will be permanently visible to anyone on the internet
-— even if the PR is later closed or the branch is deleted, the history remains.
-
-Please review the PR description above and confirm you're comfortable with
-everything in it being public.
-```
-
-Wait for the user to explicitly confirm before proceeding with `gh pr create`.
-
-### 4. Create or update PR
-
-Use `gh` CLI for all PR operations:
-
-**Create new PR:**
 ```bash
-gh pr create --base "<base-branch>" --title "<title>" --body "$(cat <<'EOF'
-<description body here>
-EOF
-)"
+git status --short
+git diff --stat
+git diff --cached --stat
+git diff <base>...HEAD --stat
+git log --oneline <base>..HEAD
 ```
 
-If the user explicitly requested a draft PR, add `--draft`.
+Every change included in the PR must match the intent from step 1. If the work contains unrelated changes, stop and ask whether to include, split, or exclude them. Leave unrelated work untouched until the user decides.
 
-**Update existing PR:**
+If the unpushed branch name is meaningless or unrelated to the intent, propose a descriptive name and wait for confirmation before `git branch -m`. Skip renaming when `already_pushed` is true.
+
+Commit only validated changes when needed. Write the commit message like the PR body: a subject line, a blank line, then one paragraph per line with no wrapping. Pass it with `git commit -F <path>`; a hard-wrapped message becomes permanent line breaks in published history. Push the current branch with upstream tracking:
+
 ```bash
-gh pr edit --body "$(cat <<'EOF'
-<description body here>
-EOF
-)"
+git push -u origin <branch>
 ```
 
-**Check if PR exists:** `gh pr view --json number 2>/dev/null`
+This step is complete when every published change matches the intent and the branch tracks its remote branch.
 
-If PR already exists for branch, update its description. Otherwise create new PR.
+## 5. Write the PR
 
-**Description format:**
+Use the user's intent for `Why?` and the actual diff for `How?`:
+
 ```markdown
 ### Why?
 
-[The problem we're solving - from user's explanation, NOT fabricated]
+[The problem and reason stated by the user]
 
 ### How?
 
-[High-level approach - 1-2 sentences. Do NOT list changes or files. The diff shows the implementation.]
-
-<details>
-<summary>Implementation Plan</summary>
-
-[PLAN_CONTENT — see "Finding the plan file" below. If no plan file found, omit this entire <details> section.]
-
-</details>
-
+[The high-level approach in one or two sentences]
 ```
 
-**Issue/PR references:** When referencing related issues or PRs, use bulleted lists (`- #123`) so GitHub renders them as rich linked cards.
+For a small, self-evident change, write one concise paragraph covering both instead of the template.
 
-**Avoid accidental issue links:** On GitHub, `#` followed by a number (e.g., `#1`, `#42`) automatically creates a hyperlink to the issue/PR with that number. Only use `#NUMBER` when intentionally linking to an issue or PR. Never use it in prose like "the #1 cause" or "#3 priority" — rephrase instead (e.g., "the top cause", "third priority"). If a literal `#` before a number is unavoidable, escape it with a backslash (`\#1`).
+Include an implementation plan in a collapsed `<details>` block only when the current conversation identifies its file path. Paste the plan's Markdown without its local path. Do not search agent-specific plan directories.
 
-**Finding the plan file:**
+Apply these body rules:
 
-1. Check conversation history for a plan file path associated with the current task.
-2. If the conversation does not identify a plan file, omit the plan section. Do not guess a tool-specific plan directory.
-3. If a plan file is identified, read it and paste its full Markdown contents into the `<details>` block. Do not include the file path because local plan files will not exist in the PR.
+- Write the body with the `write` tool to a temporary file, one paragraph per line. Never pass the body inline in a shell command, and never wrap text at a terminal width; a wrapped line becomes a hard line break in the published PR.
+- Omit file lists and test-plan sections.
+- Add `### Decisions` only for trade-offs the user discussed.
+- Add `### Risks` only for risks the user stated.
+- Reference an issue only when verified from the user's words, the branch name, commits, or tracker output. Use `- Fixes #123` to close it and `- Refs #123` to link it.
+- Reserve `#NUMBER` for intentional GitHub links; rephrase or escape other number signs.
+- Keep customer and organization names, email addresses, support-ticket contents, and secrets out of the title and body whatever the repository visibility.
 
-**Optional sections** (only if user explicitly discussed):
-- `### Decisions` - if user explained trade-offs or choices made
-- `### Risks` - ONLY if user mentioned specific concerns
+## 6. Create or update the normal PR
 
-## Response Style
+Check for an existing PR on the current branch:
 
-Output only what the user needs to act:
-- **Step 2:** the intent question (only if intent is missing from session history)
-- **Step 3.6:** the PUBLIC repo warning block (only on public repos)
-- **PR URL** on success
-- **Error messages** when something goes wrong
+```bash
+gh pr view --json number,url 2>/dev/null
+```
 
-All other steps run silently. No step narration ("Now I'll run...", "Let me check...", "The script returned..."), no script output recap, no announcing each phase. This skill creates a PR — it does not narrate creating a PR.
+Write the body to a temporary file as required by step 5. Refresh an existing PR's body when follow-up commits materially change the change's scope, approach, or risk; typo-only, formatting-only, and rename-only follow-ups leave the body alone. Base the refreshed body on the current full diff, not the sequence of revisions:
 
-## Anti-Patterns
+```bash
+gh pr edit <number> --repo "<repo>" --body-file "<path>"
+```
 
-| Don't | Why |
-|-------|-----|
-| Dispatch a sub-agent for this workflow | Core Rule 1 — sub-agents lose session intent, repeat questions, and cannot reliably see the diff context. Every step runs inline. |
-| Skip `check-pr-context.sh` (step 1.5) | Core Rule 8 — the script is mandatory before `gh pr create`; its output cannot be inferred from prompt text or prior turns. |
-| Open a PR after the user said "don't" | Core Rule 2 — "don't push yet" / "don't make a PR" in the session is a hard halt. Ask, don't override. |
-| Base How? on conversation, not diff | PR description must reflect the ACTUAL changes, not just what was discussed |
-| Use `#NUMBER` in prose | `#42` links to issue 42 — only use for intentional references, rephrase otherwise |
-| Include internal details in public repos | Internal URLs, team names, customer data, and tool references are visible to anyone — check repo visibility first |
-| Add "Files Updated", "Test plan", or risk sections | Core Rules 4, 6, 7 — these sections are always omitted; GitHub shows the diff, testing is implicit, risks belong in the user's own judgment |
+Otherwise create it with an explicit base and title:
+
+```bash
+gh pr create --repo "<repo>" --base "<base>" --title "<title>" --body-file "<path>"
+```
+
+Add `--draft` only when the user requested a draft. Completion means `gh` returns the PR URL.
+
+## Output
+
+Keep intermediate work silent. Output only:
+
+- the intent question when intent is missing
+- a decision question when a gate stops the workflow
+- the public-repository warning and proposed publication content when confirmation is required
+- the PR URL, or ordered stack of PR URLs, on success
+- the actionable error when a command fails
