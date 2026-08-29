@@ -26,7 +26,7 @@ Promise<Result<User, UserLookupError>>
 
 rather than a `Promise<User>` that rejects for ordinary lookup or storage failures.
 
-Promise rejection is equivalent to throwing. The module that directly owns a third-party client—an Adapter or a localized service implementation—catches unclassified rejection and translates it into a known tagged error before it crosses that module's public interface. Rejection may escape application code only for a defect.
+Promise rejection is equivalent to throwing. The module that directly owns a third-party client (an Adapter or a localized service implementation) catches unclassified rejection and translates it into a known tagged error before it crosses that module's public interface. Rejection may escape application code only for a defect.
 
 ## Defects
 

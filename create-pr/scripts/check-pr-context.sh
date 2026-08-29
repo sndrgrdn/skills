@@ -3,7 +3,7 @@
 # Usage: bash "<skill-directory>/scripts/check-pr-context.sh"
 # Output: {"repo":"...","visibility":"PUBLIC|PRIVATE|INTERNAL|UNKNOWN","branch":"...","already_pushed":bool,"default_branch":"..."}
 
-# `git config --get remote.origin.url` is read-only — it reads the remote without
+# `git config --get remote.origin.url` is read-only: it reads the remote without
 # any chance of mutating it (unlike `git remote ...`, which can rewrite remotes).
 REPO_FULL=$(git config --get remote.origin.url 2>/dev/null | sed -E 's|^.*github\.com[:/]||; s|\.git$||') || REPO_FULL=""
 

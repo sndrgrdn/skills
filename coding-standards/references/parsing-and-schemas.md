@@ -43,7 +43,7 @@ Use schema libraries as boundary parsers. Choose, in order:
 
 Represent parsing failures with typed custom errors.
 
-Parse every path where less-trusted data re-enters typed code, including database reads, cache hits, RPC responses, event consumption, workflow replay, and serialized-state rehydration—even when the same process wrote the data. A write-time parser does not prove stored or replayed bytes remain valid.
+Parse every path where less-trusted data re-enters typed code, including database reads, cache hits, RPC responses, event consumption, workflow replay, and serialized-state rehydration, even when the same process wrote the data. A write-time parser does not prove stored or replayed bytes remain valid.
 
 On a measured performance-critical path, a documented trust invariant may replace read-time parsing. Keep the unchecked representation inside its owning boundary.
 

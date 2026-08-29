@@ -44,20 +44,20 @@ Trace each caller-visible operation from input through every decision and effect
 
 Read every applicable reference completely before designing the change:
 
-- [`references/effect.md`](references/effect.md) — whenever Effect code changes; follow its branch pointers before editing.
-- [`references/effect-alchemy.md`](references/effect-alchemy.md) — when an Alchemy Worker, Durable Object, Workflow, binding-backed service, or two-phase runtime composition changes.
-- [`references/errors.md`](references/errors.md) — when behavior can fail or absence may be ordinary.
-- [`references/sensitive-data-and-observability.md`](references/sensitive-data-and-observability.md) — when behavior handles secrets, personal data, logging, tracing, metrics, or error reporting.
-- [`references/parsing-and-schemas.md`](references/parsing-and-schemas.md) — when data crosses an external/serialized edge, a schema changes, or protocol/persistence representations are designed.
-- [`references/domain-types-and-state.md`](references/domain-types-and-state.md) — when IDs, units, constrained values, optional inputs, entities, lifecycle states, or operation options change.
-- [`references/modules-services-and-adapters.md`](references/modules-services-and-adapters.md) — when behavior owns domain rules, coordinates effects, uses dependencies, crosses technology boundaries, or changes module/service design.
-- [`references/persistence.md`](references/persistence.md) — when behavior reads or writes a database, cache, durable object, ORM model, transaction, or persisted record.
-- [`references/workflows-transactions-and-idempotency.md`](references/workflows-transactions-and-idempotency.md) — when work spans boundaries, retries, resumes, receives redelivery, delays, compensates, or may execute more than once.
-- [`references/configuration-and-resources.md`](references/configuration-and-resources.md) — when behavior reads configuration, creates/closes resources, performs startup work, uses time/randomness, or touches global state.
-- [`references/testing.md`](references/testing.md) — whenever behavior, public inference, tests, or test implementations change.
-- [`references/typescript-safety.md`](references/typescript-safety.md) — when types, signatures, mutable values, casts, non-null assumptions, or compiler settings change.
-- [`references/imports-exports-and-files.md`](references/imports-exports-and-files.md) — when imports, exports, entrypoints, helper placement, or file organization change.
-- [`references/comments-and-jsdoc.md`](references/comments-and-jsdoc.md) — when exported symbols, comments, JSDoc, user-facing text, or rendered errors change.
+- [`references/effect.md`](references/effect.md): whenever Effect code changes; follow its branch pointers before editing.
+- [`references/effect-alchemy.md`](references/effect-alchemy.md): when an Alchemy Worker, Durable Object, Workflow, binding-backed service, or two-phase runtime composition changes.
+- [`references/errors.md`](references/errors.md): when behavior can fail or absence may be ordinary.
+- [`references/sensitive-data-and-observability.md`](references/sensitive-data-and-observability.md): when behavior handles secrets, personal data, logging, tracing, metrics, or error reporting.
+- [`references/parsing-and-schemas.md`](references/parsing-and-schemas.md): when data crosses an external/serialized edge, a schema changes, or protocol/persistence representations are designed.
+- [`references/domain-types-and-state.md`](references/domain-types-and-state.md): when IDs, units, constrained values, optional inputs, entities, lifecycle states, or operation options change.
+- [`references/modules-services-and-adapters.md`](references/modules-services-and-adapters.md): when behavior owns domain rules, coordinates effects, uses dependencies, crosses technology boundaries, or changes module/service design.
+- [`references/persistence.md`](references/persistence.md): when behavior reads or writes a database, cache, durable object, ORM model, transaction, or persisted record.
+- [`references/workflows-transactions-and-idempotency.md`](references/workflows-transactions-and-idempotency.md): when work spans boundaries, retries, resumes, receives redelivery, delays, compensates, or may execute more than once.
+- [`references/configuration-and-resources.md`](references/configuration-and-resources.md): when behavior reads configuration, creates/closes resources, performs startup work, uses time/randomness, or touches global state.
+- [`references/testing.md`](references/testing.md): whenever behavior, public inference, tests, or test implementations change.
+- [`references/typescript-safety.md`](references/typescript-safety.md): when types, signatures, mutable values, casts, non-null assumptions, or compiler settings change.
+- [`references/imports-exports-and-files.md`](references/imports-exports-and-files.md): when imports, exports, entrypoints, helper placement, or file organization change.
+- [`references/comments-and-jsdoc.md`](references/comments-and-jsdoc.md): when exported symbols, comments, JSDoc, user-facing text, or rendered errors change.
 
 **Complete when:** every changed input, output, failure, dependency, effect, state transition, external representation, and test surface maps to an owning module and an applicable reference.
 

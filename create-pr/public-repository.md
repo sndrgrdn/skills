@@ -21,8 +21,8 @@ Sanitize every proposed PR title and body using the same categories. Keep the te
 
 ```text
 WARNING: This repository is PUBLIC. The PR title, description, comments,
-commits, and full diff will be permanently visible to anyone on the internet
-— even if the PR is later closed or the branch is deleted, the history remains.
+commits, and full diff will be permanently visible to anyone on the internet,
+even if the PR is later closed or the branch is deleted. The history remains.
 
 Please review the PR description above and confirm you're comfortable with
 everything in it being public.

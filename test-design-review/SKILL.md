@@ -10,10 +10,10 @@ Review the specified tests against every rule below. When the caller supplies a 
 
 ## Process
 
-1. **Pin the scope.** Take the files, diff, revisions, or pull request the caller named. When none is named, ask for a target — never infer one from a branch or a default ref.
+1. **Pin the scope.** Take the files, diff, revisions, or pull request the caller named. When none is named, ask for a target; never infer one from a branch or a default ref.
 2. **Assess every rule.** Work through Specification, Ends, not means, Essence, Abstraction level, Tests are not programs, and Determinism, including every distinct rule inside each. Keep a ledger marking every rule `finding`, `clear`, or `not applicable`. Done when every rule carries one of those states.
 3. **Record findings.** Each material violation gets its location, the behavior or design risk it hides, and a specific remedy. Combine findings only when they share one cause and one remedy. Rank by severity.
-4. **Report.** Always publish the ledger — no rule goes unmentioned — and list findings *location → risk → remedy*, most severe first. If the caller asked for fixes, apply them and re-run the affected tests. Otherwise stop after the report.
+4. **Report.** Always publish the ledger (no rule goes unmentioned) and list findings *location → risk → remedy*, most severe first. If the caller asked for fixes, apply them and re-run the affected tests. Otherwise stop after the report.
 
 ## Core Principle
 
@@ -39,7 +39,7 @@ Good: `describe "rerunning only failed tests"`
 
 ## Ends, not means
 
-**Assert the outcome, never the mechanism.** A test should survive the implementation being replaced — a different class, method, flag, or cache — so long as what the user or the system observes stays the same. Mock-recording assertions (`have_received`), reads of cache store keys, and reach-ins to internals all test *means*; assert the observable *end* instead, and stub only what you must (external services), so the real code runs against the real outcome.
+**Assert the outcome, never the mechanism.** A test should survive the implementation being replaced (a different class, method, flag, or cache) so long as what the user or the system observes stays the same. Mock-recording assertions (`have_received`), reads of cache store keys, and reach-ins to internals all test *means*; assert the observable *end* instead, and stub only what you must (external services), so the real code runs against the real outcome.
 
 Assert the end result, not the pose that produced it:
 
@@ -51,7 +51,7 @@ it "marks the particle's position blue" do
 end
 ```
 
-The test above locks in two accidents — the particle happens to sit on cell (5, 0) and stays blue. It breaks the moment either changes, though the behavior (a touched cell takes the particle's color) never did. Read the real values instead:
+The test above locks in two accidents: the particle happens to sit on cell (5, 0) and stays blue. It breaks the moment either changes, though the behavior (a touched cell takes the particle's color) never did. Read the real values instead:
 
 ```ruby
 it "turns the touched cell into the particle's color" do
@@ -87,7 +87,7 @@ it "records a queued event for the task" do
 end
 ```
 
-Performance semantics too — test the effect, not the cache's key:
+Performance semantics too: test the effect, not the cache's key:
 
 ```ruby
 it "caches the result" do
@@ -96,7 +96,7 @@ it "caches the result" do
 end
 ```
 
-The bad version reads the cache implementation; a future switch to memoization or a database column breaks it for no behavioral change. Test the observable contract — no redundant work on a second call:
+The bad version reads the cache implementation; a future switch to memoization or a database column breaks it for no behavioral change. Test the observable contract: no redundant work on a second call.
 
 ```ruby
 it "does not query the database on subsequent calls" do
@@ -130,7 +130,7 @@ it "redirects to the repositories page" do
 end
 ```
 
-Drive the public seam, not a flag deep inside the code — here, making the task *finish* (an exit code) instead of installing the internal json it happens to read:
+Drive the public seam, not a flag deep inside the code; here, making the task *finish* (an exit code) instead of installing the internal json it happens to read:
 
 ```ruby
 task.update!(json_output: { "summary" => { "failure_count" => 0 } }.to_json)
@@ -161,11 +161,11 @@ def unsubscribe_path_from(sent_email)
 end
 ```
 
-Reach the public surface, never the object's insides. Do not use `.send`, `.public_send`, or `instance_variable_set` to touch a private method or variable. If a private method genuinely needs its own test, make it public — that is usually a small, honest price. And `instance_variable_set` is a confession of poor design: when it feels like the only option, name the design flaw and propose the concrete refactor instead of installing the test.
+Reach the public surface, never the object's insides. Do not use `.send`, `.public_send`, or `instance_variable_set` to touch a private method or variable. If a private method genuinely needs its own test, make it public; that is usually a small, honest price. And `instance_variable_set` is a confession of poor design: when it feels like the only option, name the design flaw and propose the concrete refactor instead of installing the test.
 
 ## Essence
 
-**Assert only what matters.** Skip claims the response body already implies — if a body assertion fails, the response was not successful, so a separate `be_successful` check adds nothing but noise:
+**Assert only what matters.** Skip claims the response body already implies: if a body assertion fails, the response was not successful, so a separate `be_successful` check adds nothing but noise:
 
 ```ruby
 expect(response).to be_successful  # implied by the body check
@@ -178,7 +178,7 @@ expect(response.body).not_to include("deleted_item")
 expect(response.body).not_to include("deleted_item")
 ```
 
-Do not write tests that cannot fail — they answer "Is the code I wrote the code I wrote?" and the answer is always yup. A test that repeats the fixture's answer back into an expectation is autobiography, not a specification:
+Do not write tests that cannot fail; they answer "Is the code I wrote the code I wrote?" and the answer is always yup. A test that repeats the fixture's answer back into an expectation is autobiography, not a specification:
 
 ```ruby
 it "renders a labeled checkbox for each github account" do
@@ -238,7 +238,7 @@ describe "#matches?" do
 end
 ```
 
-And name the class under test rather than hiding it behind `described_class` — the indirection obscures the very subject and is rarely worth the confusion it causes.
+And name the class under test rather than hiding it behind `described_class`; the indirection obscures the very subject and is rarely worth the confusion it causes.
 
 ## Abstraction level
 
@@ -289,7 +289,7 @@ describe "Rerun Failed button", type: :system do
 end
 ```
 
-Note what the rewrite dropped: the `before` no longer fabricates the entire k8s environment the suite needed — the scene itself does not need it, so it did not belong at this level.
+Note what the rewrite dropped: the `before` no longer fabricates the entire k8s environment the suite needed; the scene itself does not need it, so it did not belong at this level.
 
 ### Shape each test Arrange, Act, Assert
 
@@ -373,11 +373,11 @@ let!(:executor) { instance_double(Executor, task_id: '123') }
 let!(:worker) { Worker.new(executor) }
 ```
 
-The literal is better still: when nothing else references the value, a `let` is ceremony — hard-code it.
+The literal is better still: when nothing else references the value, a `let` is ceremony, so hard-code it.
 
 ## Tests are not programs
 
-**Specs are flat and static.** The minute a test gains control flow — a loop, a counter, a poll, a branching stub — it stops specifying and starts implementing. It raises more questions than it answers and its failures are cryptic. Consider:
+**Specs are flat and static.** The minute a test gains control flow (a loop, a counter, a poll, a branching stub) it stops specifying and starts implementing. It raises more questions than it answers and its failures are cryptic. Consider:
 
 ```ruby
 it 'treats a timed-out job run as finished' do
@@ -402,7 +402,7 @@ end
 
 A reader must unwrap a stateful stub to trust a single status change. Keep the test a plain Arrange-Act-Assert.
 
-The quiet cousin of that failure is behavior the test never earns — a `wait:` someone cargo-culted in, a sleep, a retry. Ask whether it is fixing a real race you found or just covering for one you imagine:
+The quiet cousin of that failure is behavior the test never earns: a `wait:` someone cargo-culted in, a sleep, a retry. Ask whether it is fixing a real race you found or just covering for one you imagine:
 
 ```ruby
 expect(page).to have_content("Passed", wait: 3)

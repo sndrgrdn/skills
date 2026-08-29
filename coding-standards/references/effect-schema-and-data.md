@@ -106,7 +106,7 @@ Guidance:
 - Use `Schema.TaggedUnion` when the union needs decoding, encoding, persistence, wire validation, JSON Schema derivation, or schema composition.
 - Use `Schema.tag(...)` when an external contract has a custom discriminator field such as `type` or `kind`; combine those structs with `Schema.toTaggedUnion("type")` when union helpers are needed.
 - If the encoded contract omits the discriminant, use `Schema.tagDefaultOmit(...)` deliberately.
-- Use structural schemas—`Schema.Struct`, `Schema.TaggedStruct`, or `Schema.TaggedUnion`—for new data models.
+- Use structural schemas (`Schema.Struct`, `Schema.TaggedStruct`, or `Schema.TaggedUnion`) for new data models.
 
 ## Errors
 
