@@ -1,55 +1,30 @@
 ---
 name: write-discoverable-code
-description: |
-  Rules for writing code that coding agents (and humans) can find and understand through plain-text search. Apply whenever writing or renaming code: functions, types, constants, files, error messages, doc comments, and the AGENTS.md conventions that govern them.
-
-  Grounded in measurement: agents navigate by plain-text search, not by AST or language server, so every identifier is a search query and every search miss costs wasted reads.
-license: MIT
+description: Make code resolve through plain-text search when naming symbols, defining signatures, writing comments or diagnostics, and organizing files, modules, imports, or tests.
 ---
 
-# Write discoverable code
+One search should resolve the question. A hit should identify the exact concept, lead to one definition, and provide enough local context to use it without following unrelated code.
 
-Coding agents discover code by searching for strings and reading small windows around the hits. They have no hover text, no jump-to-definition, and no memory between sessions. These rules make code resolvable in one search instead of five.
+## Names are search queries
 
-## 1. Names are search queries
+- Give exported symbols and methods the shortest name that greps uniquely, usually two to four words with a domain term. Give generic verbs their object. Receivers and directory paths do not disambiguate a symbol because they are absent from its search hit; count context only when a rigid convention makes it visible at the use site.
+- Use one canonical project spelling for each concept. Rename a symbol in the same change when its behavior, audience, or visibility changes, and keep one definition site.
+- Give files domain names rather than bare roles such as `config`, `types`, `utils`, or `handlers`. Keep `index` files as thin re-export entry points.
 
-- **Exported symbols get 2–4 word names, at least one of them a domain word.** `diffUserObjects`, not `diff`. `queueEventForDispatch`, not `queue`. Measured on a ~700k-line monorepo: 1-word exported names are globally unique 61% of the time; 3-word names 96%; 4+ words 98%. Three words is the knee of the curve. Use the shortest name that greps uniquely; put the rest in the doc comment. (In qualified-call languages like Go the package name counts as a word: `stripe.NewClient` is already a three-word token.)
-- **Give generic verbs their object.** `sanitizeEmailHtml`, not `sanitize`; `validateSmtpConfig`, not `validateConfig`. Qualify only as far as uniqueness requires, then stop.
-- **Methods stand alone.** No import ever names a method, `client.getUsers()` leaves the same lone text trail as a top-level symbol. The receiver doesn't disambiguate a search, so `client.update()` is as unsearchable as a bare `update`. Give methods self-describing names, exactly like exports.
-- **One definition site per symbol.** Never copy a function between files; move it and delete the original in the same change. Shared helpers get one concept-named home and are imported everywhere else.
-- **Do not rely on the module path to disambiguate a generic name.** The import that disambiguates `users/diff.ts` from `orders/diff.ts` sits at the top of the file; the search hit is at line 300. Put the context in the symbol (`formatDurationMs`), not the folder. Exception: rigid, absolute conventions where the path carries the meaning (e.g. every contract file exporting `Input`/`Output`).
-- **One concept, one spelling.** Pick `organizationId` or `orgId` and use it everywhere; every synonym splits every future search in half. Reuse existing vocabulary in the codebase you are editing rather than introducing near-synonyms. The project glossary (CONTEXT.md, when one exists) is the authoritative spelling of each concept; check it before coining a name.
-- **Record conventions where agents will read them.** A naming convention or a non-obvious home for a concept belongs in AGENTS.md, not just in code comments; it is the one file every session reads, and the cheapest way to make your search terms predictable.
-- **When behavior or audience changes, rename in the same commit.** A stale name is misinformation with a 100% open rate; that includes visibility markers: a `_private` helper that other modules now import needs a public name.
-- **Filenames are names too, never use bare-role filenames.** `config.ts`, `types.ts`, `utils.ts`, `helpers.ts`, `handlers.ts` say nothing in a search result and collide with every other module's config/types/utils in the repo. Prefix the domain: `billing-plan-config.ts`, not `config.ts`. (`index.ts` is acceptable only as a thin re-export entry point.)
-- **A barrel is a hop.** Package specifiers and `export *` barrels erase the name→file mapping: following `@modem/common` means opening package.json, then the barrel, then grepping the package again for a definition that was one hop away. Prefer direct imports; keep any barrel short and named (`export { formatDuration } from './duration'`), never wholesale.
+## Signatures answer the first question
 
-## 2. Types are the documentation agents can't skip
+Use explicit input and output types whose names make the signature read as a sentence. A search hit or compiler error should identify what enters, what returns, and which domain concepts are involved without requiring an implementation read.
 
-- **Make the signature answer the first question.** A typed signature, `enrichUser(user: User): EnrichedUser`, tells what goes in and what comes out from the grep hit alone, no body read. An `any` or missing type forces reading the implementation, then whatever it calls. Name the input and output types so the signature reads as a sentence.
-- **Brand your primitive IDs.** `z.string().brand<'UserId'>()` (TS) or newtypes (Rust). A `transferOwnership(userId: string, orgId: string)` signature makes argument transposition invisible; branded types make it a compile error that names the concepts.
-- **Use capability-token parameter types** for privileged operations (e.g. requiring an `OrgScopedDb` instead of a raw connection). A comment is a request; a required type is physics.
-- **Model state with discriminated unions**, not clusters of nullable fields with implicit rules.
-- **Name types like they'll be quoted back**; they will be, in compiler errors the agent uses to self-correct. `OrgScopedDb` explains itself; `Ctx2` does not. Avoid `any`: every `any` is a spot where the compiler goes silent and the agent is back to guessing. A bad name at least leaves a trail; `any` leaves nothing to search for.
+## Put information where search lands
 
-## 3. Say it where the search lands
+- Give every export a one-line doc comment with the sharpest constraint its signature cannot show and the natural-language phrase a reader would search for. A comment that restates the name or signature adds no value.
+- Keep event names, flags, error codes, and diagnostic prefixes as complete literals. Start each error message at its throw site with a distinctive literal phrase.
+- State deliberate non-implementations where a search for the absent behavior would land. Mark obsolete paths with `@deprecated` and point to the replacement.
+- Imported names and their doc lines should make sense without opening their source modules.
 
-- **One-line doc comment on every export**, stating the sharpest constraint the code itself can't show (units, timezone, "source time, not insert time", ownership). The definition is where a name search lands; that line is your whole message. Make it carry the constraint or the search phrase, and nothing else: a comment that only re-words the name or signature wastes the one line a search will read.
-- **Write the plain-words phrase in the doc comment.** Searches arrive as natural language ("rate limit", "retry delay"), and camelCase identifiers don't match phrase greps; `RateLimiter` is invisible to a search for "rate limit". The doc comment above each export should contain, in ordinary spaced-out words, the phrase someone would search for: a `SessionExpiryChecker` should say `/** Checks whether the user session has expired. */` so that a grep for "session expired" or "session has expired" lands here.
-- **A module should make sense with its imports unread.** Each imported name plus its doc line should say enough that the reader never has to open the source module. If they do, the import's name is failing, not the reader.
-- **Keep strings whole.** Never build event names, flags, or error codes with template interpolation (`` `github.${entity}.${action}` `` makes `github.pr.merged` unsearchable). Write the full literal even when a loop feels DRYer.
-- **Error messages start with a unique literal prefix**, so a message seen in a log greps straight back to the throw site. ``throw new Error(`Webhook signature mismatch for ${id}`)``, never ``throw new Error(`${prefix}: mismatch`)``.
-- **One searchable concept per file, and keep orchestrators thin.** The code that answers "where is X done?" should live in a module named after X, the thing a reader would ask about, not the mechanism inside, not inline in a coordinator, pipeline, or service class. An orchestrator should read as a sequence of calls into well-named modules; if a reader lands in it from a search, every line should point them one hop from the real implementation. Burying the implementation of several concepts in one large file makes every search for any of them land on the same wall of code. Split until each question-sized concept has one named home, then stop: a helper meaningful only inside one concept belongs inline, and a file per tiny function fragments one answer across several reads. The test runs both ways: a module that answers many unrelated questions is holding more than one concept.
-- **Colocate tests** (`foo.test.ts` next to `foo.ts`) so one search finds behavior and its specification together.
-- **Write down deliberate non-implementations.** Grep finds code, not the absence of code. If a reader would plausibly search for something the system deliberately doesn't do, sanitize inbound HTML, dedupe retries, resize images, a one-line note where that search would land ("Inbound HTML is not sanitized") is the only way the search resolves to a deliberate "no" instead of paging through every near-miss.
-- **Mark dead ends.** `@deprecated` on the old path, with a pointer to the new one.
+## Organize around searchable concepts
 
-## Quick checklist before committing
-
-1. Would one search for each new exported name be enough to find its implementation?
-2. Would swapping two arguments of the new function fail the build?
-3. Is the one thing a caller must know but the signature can't say (units, timezone, ownership, ordering) written right at the definition?
-4. Do all log/error strings exist verbatim in the source?
-5. Did anything change behavior without changing its name?
-6. When code moved, is it gone from where it came from?
-7. Is every deliberate "we don't do X" written where a search for X would land?
+- Give each question-sized concept one named file. Keep orchestrators as short sequences of calls into those files. Split files that answer unrelated questions; keep helpers used only by one concept with that concept.
+- Prefer direct imports. Keep necessary barrels short and explicit; avoid `export *` chains that hide the name-to-file mapping.
+- Colocate a test with the behavior it specifies so one search finds both.
+- Record non-obvious naming and concept-location conventions in `AGENTS.md`, where future sessions will load them.
