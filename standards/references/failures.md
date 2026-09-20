@@ -8,7 +8,7 @@ An expected failure is part of normal operation, such as rejected input, denied 
 
 A defect means correct execution is impossible because an internal invariant or programming assumption is broken. Do not turn defects into plausible business failures.
 
-## Preserve meaning
+## Failure semantics and identity
 
 Preserve an expected failure until the boundary that can render it as a valid protocol, interface, or operational outcome. Domain behavior does not choose HTTP status codes, and transport code does not erase domain meaning before rendering it.
 
@@ -31,6 +31,6 @@ Classify an HTTP response by status before decoding it as a successful represent
 
 Treat a timeout, interruption, or missing response from a remote mutation as uncertainty, not proof that the mutation failed. Reconcile or retry only from actual evidence about the remote outcome and idempotency guarantee.
 
-## Completion check
+## Completion criterion
 
-Every expected failure has an intentional identity and public path. Defects remain distinct. Translation occurs at the boundary that understands the source and target meanings, diagnostics retain safe context, and uncertain remote outcomes are not misclassified as known failures.
+Every expected failure has an intentional identity and public propagation path. Defects remain distinct. Translation occurs at the boundary that understands the source and target meanings, diagnostics retain safe context, and uncertain remote outcomes are not misclassified as known failures.

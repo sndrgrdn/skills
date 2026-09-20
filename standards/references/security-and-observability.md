@@ -25,6 +25,6 @@ Separate these responsibilities:
 
 Do not treat parameter filtering as authorization.
 
-## Completion check
+## Completion criterion
 
 Every diagnostic field is safe and necessary, secrets remain outside observable outputs, established telemetry remains connected, and correlation context crosses relevant boundaries. Credential verification, permission policy, enforcement, and protocol translation each have an explicit owner.

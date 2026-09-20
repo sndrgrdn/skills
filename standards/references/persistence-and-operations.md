@@ -8,7 +8,7 @@ Select a persisted representation from version, discriminator, or storage author
 
 Validate migrations and imports before committing writes. Preserve invalid source evidence for diagnosis. Treat a code name, physical resource identity, and persisted-state contract as separate concerns.
 
-## Independent lifecycles
+## Persisted data lifecycles
 
 Persisted data with its own creation cadence, mutation rules, write ownership, retention, cleanup, or deletion schedule has evidence of an independent lifecycle. Give it a named owner rather than attaching it to a convenient host record whose lifecycle differs.
 
@@ -34,10 +34,10 @@ Define each repeated operation's behavior after success, expected failure, defec
 
 Match retry timing to the failure. Bound attempts or elapsed time, add jitter when synchronized callers can amplify failure, and honor provider retry guidance. Preserve the final classified failure unless a truthful fallback handles it.
 
-## Uncertain outcomes
+## Uncertain remote mutation outcomes
 
-A timeout or lost response from a remote mutation does not prove that the mutation failed. Preserve request identity, receipts, checkpoints, and recovery intent when they are required to reconcile, retry, or compensate safely. Define the operation's point of no return.
+Preserve request identity, receipts, checkpoints, and recovery intent when they are required to reconcile, retry, or compensate safely. Define the operation's point of no return.
 
-## Completion check
+## Completion criterion
 
 Persistence mechanics remain private to a cohesive capability. Representation authority is explicit, independently living data has its own owner, migrations commit only validated state, and transaction scope contains only atomic database work. Every duplicate path, retry, repeated operation, and uncertain remote mutation has an explicit owner and safety policy.

@@ -2,6 +2,10 @@
 
 ## Names and operation inputs
 
+Use Intention-Revealing Interfaces: public type and operation names state their domain purpose and effect without requiring callers to inspect their implementation.
+
+Maintain a Ubiquitous Language for each established domain model. Use the same terms in code, interfaces, tests, and documentation, and rename them together when the model changes.
+
 Name parsing, construction, predicates, and assertions according to what they do:
 
 - parsing converts an external or less-trusted representation into a meaningful value;
@@ -11,11 +15,11 @@ Name parsing, construction, predicates, and assertions according to what they do
 
 Use booleans for predicates and genuinely independent choices. Give behavior-selecting inputs named policies or domain values.
 
-Keep the primary input obvious and name additional policy choices. Add an option only when a real caller requires that behavior.
+Keep the primary input distinct and name additional policy choices. Add an option only when a real caller requires that behavior.
 
 Name capabilities by what they provide, not by the consumer that currently uses them. Put use-case specificity in operation names. Use architecture suffixes only when they express the capability's established meaning.
 
-## Public structure and files
+## Public APIs and file organization
 
 Reference abstractions through their owning modules or intentional package, gem, or subsystem entrypoints. Aggregation layers represent deliberate public APIs rather than import convenience.
 
@@ -25,11 +29,11 @@ Organize files around cohesive, searchable subjects rather than arbitrary size l
 
 ## Comments
 
-Keep comments short and accurate. Comment only where code cannot show intent, ownership, invariants, trade-offs, or caller-visible contracts. Delete narration.
+Comment only where code cannot show intent, ownership, invariants, trade-offs, or caller-visible contracts. Delete narration.
 
 Use durable domain vocabulary that readers can search for. Keep temporary planning, ticket, migration-phase, and internal storage terminology out of public language.
 
-## Dependencies and enforcement
+## Dependency APIs and tool enforcement
 
 Select dependency APIs from the project's pinned version and version-matched source or documentation. Do not infer API availability or behavior from memory or current upstream material alone.
 
@@ -39,6 +43,6 @@ Treat a passing check as evidence only for what its configuration and implementa
 
 Keep rule catalogs and numeric thresholds in configuration rather than duplicating them in prose.
 
-## Completion check
+## Completion criterion
 
 Names expose actual behavior and ownership, inputs expose caller-selected policy, files remain cohesive and searchable, and public surfaces contain only intentional contracts. Comments add information unavailable from code. Dependency and enforcement claims cite the active version, configuration, and evidence source.
