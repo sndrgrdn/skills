@@ -13,10 +13,9 @@ Prefer tests by confidence:
 3. focused/property tests for pure Domain Modules;
 4. unit tests for meaningful behavior rather than implementation details.
 
-Module mocking with `vi.mock` or `jest.mock` is forbidden. Replace behavior through real services and implementations:
+Module-level replacement of imported dependencies is forbidden. Replace behavior through real services and implementations:
 
-- constructor-injected interfaces/classes;
-- Effect services/Layers;
+- dependency-injected interfaces or protocols;
 - local database substitutes such as SQLite;
 - faithful in-memory implementations;
 - fake external implementations when needed.
@@ -35,7 +34,7 @@ A spy assertion is appropriate only when the interaction is itself the observabl
 
 Assess property-based testing for every changed invariant, transition, normalization, equivalence, ordering, idempotence, or roundtrip. Add property tests when generated inputs cover meaningful cases beyond a short example list. Apply this assessment especially to parsers, smart constructors, branded/refined types, state machines, serialization, and lawful combinators.
 
-Use `fast-check` in normal TypeScript projects. In Effect projects, prefer Effect's FastCheck integration and derive arbitraries from owning Schemas when available.
+Use the repository's established property-testing framework. Derive generators from owning runtime schemas when the framework supports it.
 
 Keep reusable arbitraries beside the domain module they support. Add a shared test-data entrypoint only when multiple consumers need one:
 
@@ -69,7 +68,7 @@ Keep production branches, exports, flags, and behavior determined by production 
 
 ## Compile-time behavior
 
-When inference is public behavior, add compile-time tests using ordinary call sites without rescue annotations or casts. For parser/service API changes, assert the complete function contract: input, arity/options, success, expected errors, and Effect requirements where applicable. Include rejected calls as well as inferred results; parameter-only assertions can miss an error or requirement channel widened by extraction.
+When static type inference is public behavior, add compile-time tests using ordinary call sites without rescue annotations or casts. For parser or service API changes, assert the complete function contract: input, arity or options, success, expected failures, and required capabilities where applicable. Include rejected calls as well as inferred results; parameter-only assertions can miss a failure or requirement widened by extraction.
 
 ## Completion check
 
