@@ -3,8 +3,6 @@ name: standards
 description: Build software correct by construction. Use when designing, implementing, or refactoring domain models, services, integrations, persistence, configuration, resources, failures, security, observability, operational workflows, or tests.
 ---
 
-# Engineering standards
-
 Build correct by construction. Parse data into meaningful representations, make expected failures explicit, assign behavior and effects to clear owners, and keep application policy visible.
 
 ## Define behavior before implementation

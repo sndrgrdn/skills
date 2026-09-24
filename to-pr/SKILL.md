@@ -3,8 +3,6 @@ name: to-pr
 description: Prepare or publish reviewable GitHub pull requests. Use when composing a PR title or body, creating or updating a PR, or publishing a PR stack.
 ---
 
-# To Pull Request
-
 Keep intent, validation, confirmation, commit, push, and PR publication in the main session.
 
 ## 1. Select the operation

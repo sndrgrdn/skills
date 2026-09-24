@@ -3,8 +3,6 @@ name: write-like-me
 description: Learn and match the user's established voice. Use when drafting, rewriting, or polishing content on their behalf, or when creating, updating, or deleting a named venue profile.
 ---
 
-# Write Like Me
-
 1. Classify the task:
    - For drafting or rewriting, identify the venue, then read `references/core.md` and that venue profile's `guide.md` and `samples.md` in full.
    - For polishing, preserve the claims, argument, and structure. Improve only grammar, filler, flow, and wording. Flag broader changes and ask before making them.
