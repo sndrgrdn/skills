@@ -16,6 +16,8 @@ Define a service boundary through an explicit caller-facing interface. In langua
 
 A service boundary earns its place through a meaningful capability or cohesive operation, whether pure or effectful. Pure domain behavior may be owned by a service, class, interactor, module, function, or value when that form gives the capability a cohesive owner.
 
+When an interface or protocol has multiple implementations, require behavioral subtyping. Each replacement accepts every valid call permitted by the interface and preserves its guarantees, failure semantics, effects, and invariants; matching names and types is insufficient.
+
 Prefer composition, a functional core, and an imperative shell. The functional core owns deterministic decisions and transformations. The imperative shell obtains runtime information, coordinates effects, and makes their order visible.
 
 ## Responsibility ownership and dependencies
@@ -44,7 +46,7 @@ Prevent the demonstrated failure class, not hypothetical variants. New abstracti
 
 Apply YAGNI. Build the smallest coherent solution for current requirements. Introduce flexibility, abstractions, dependencies, and operational mechanisms only when a current need earns them.
 
-Prefer established repository mechanisms. Before introducing a mechanism, identify the capability it provides and inspect established mechanisms for the same capability in the same execution context. Extend the established mechanism when it fits. A parallel mechanism is an intentional architectural choice with continuing lifecycle, failure, deployment, and observability costs.
+Preserve conceptual integrity. Extend the repository's established vocabulary, contracts, failure model, and interaction patterns unless concrete requirements invalidate them. Before introducing a mechanism, identify the capability it provides and inspect established mechanisms for the same capability in the same execution context. Extend the established mechanism when it fits. A parallel mechanism is an intentional architectural choice with continuing lifecycle, failure, deployment, and observability costs.
 
 Apply the deletion test. An abstraction earns its place when removing it would spread meaningful complexity, coupling, policy, or provider mechanics into callers.
 
@@ -68,4 +70,4 @@ Give extracted behavior explicit inputs and outputs. Methods that communicate th
 
 ## Completion criterion
 
-Every changed responsibility and dependency has one owner. Modules provide useful depth, application policy and effect order remain visible, and public interfaces expose caller-relevant concepts. For each corrected defect, the enabling condition is removed at its owner where practical, or the remaining recurrence path is explicit. Each new mechanism extends an established repository mechanism when one fits or has a current need that justifies its separate cost, and each abstraction passes YAGNI and the deletion test. Each unproven cross-boundary path has an observable tracer bullet before expansion, each vertical slice completes caller-visible behavior, and refactoring reduces reasoning burden across both definitions and callers.
+Every changed responsibility and dependency has one owner. Modules provide useful depth, application policy and effect order remain visible, and public interfaces expose caller-relevant concepts. Each interface implementation preserves its interface's full behavioral contract. For each corrected defect, the enabling condition is removed at its owner where practical, or the remaining recurrence path is explicit. Each new mechanism extends an established repository mechanism when one fits or has a current need that justifies its separate cost, and each abstraction passes YAGNI and the deletion test. Each unproven cross-boundary path has an observable tracer bullet before expansion, each vertical slice completes caller-visible behavior, and refactoring reduces reasoning burden across both definitions and callers.
