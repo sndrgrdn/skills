@@ -7,10 +7,10 @@ Every remote repository you're asked to work with gets a stable local checkout a
 
 `~/.cache/checkouts/<host>/<org>/<repo>`
 
-1. Run `bash scripts/checkout.sh <repo>` with the reference as given.
-2. Use the printed path for all searching, reading, and analysis.
-3. On later references to the same repo, run the script again; it refreshes the cache automatically.
+1. Resolve `scripts/checkout.sh` relative to this SKILL.md, then run `bash <absolute-script-path> <repo>` with the reference as given.
+2. Use the printed path for all searching, reading, and analysis. The step is complete when that path is available.
+3. On later references to the same repo, run the script again; it checks for updates on a throttle.
 
-The script clones on first use (partial clone, `--filter=blob:none`), then fetches and fast-forwards on a throttle. Pass `--force-update` for a fresh copy now; `--help` lists every flag. If a refresh fails (offline), it returns the cached copy anyway, possibly stale.
+The script clones on first use (partial clone, `--filter=blob:none`), then fetches and attempts a fast-forward. Pass `--force-update` to fetch now, even during the throttle interval. For work that needs current code, use `--status` and check `update` and `fast_forward` before relying on the checkout; report a failed fetch or skipped fast-forward. If a refresh fails (offline), the cached copy remains available, possibly stale.
 
 Don't edit inside the shared cache. Copy files out or create a worktree for task-specific changes.

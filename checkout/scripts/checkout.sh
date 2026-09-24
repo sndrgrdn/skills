@@ -143,6 +143,17 @@ parse_repo() {
     echo "error: repository path must contain at least org/repo: $path" >&2
     return 1
   fi
+  if [[ "$host" == "." || "$host" == ".." || "$host" == *$'\n'* || "$path" == *"//"* || "$path" == *$'\n'* ]]; then
+    echo "error: invalid repository path: $input" >&2
+    return 1
+  fi
+  local part
+  for part in "${parts[@]}"; do
+    if [[ -z "$part" || "$part" == "." || "$part" == ".." ]]; then
+      echo "error: invalid repository path: $input" >&2
+      return 1
+    fi
+  done
 
   local last_index=$(( ${#parts[@]} - 1 ))
   local repo="${parts[$last_index]}"
