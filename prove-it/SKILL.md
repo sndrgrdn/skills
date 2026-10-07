@@ -1,5 +1,5 @@
 ---
-name: proof-it
+name: prove-it
 description: Substantiate a claim that completed work works as intended.
 disable-model-invocation: true
 ---
