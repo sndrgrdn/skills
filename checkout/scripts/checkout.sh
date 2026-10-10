@@ -181,7 +181,7 @@ origin_url="https://$host/$org/$repo.git"
 mkdir -p "$(dirname "$checkout_path")"
 
 if [[ ! -d "$checkout_path/.git" ]]; then
-  if ! git clone --filter=blob:none "$origin_url" "$checkout_path" >/dev/null; then
+  if ! git clone --depth=1 --filter=blob:none "$origin_url" "$checkout_path" >/dev/null; then
     echo "error: failed to clone $origin_url" >&2
     exit 3
   fi

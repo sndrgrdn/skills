@@ -11,6 +11,6 @@ Every remote repository you're asked to work with gets a stable local checkout a
 2. Use the printed path for all searching, reading, and analysis. The step is complete when that path is available.
 3. On later references to the same repo, run the script again; it checks for updates on a throttle.
 
-The script clones on first use (partial clone, `--filter=blob:none`), then fetches and attempts a fast-forward. Pass `--force-update` to fetch now, even during the throttle interval. For work that needs current code, use `--status` and check `update` and `fast_forward` before relying on the checkout; report a failed fetch or skipped fast-forward. If a refresh fails (offline), the cached copy remains available, possibly stale.
+The script clones on first use (shallow partial clone, `--depth=1 --filter=blob:none`), then fetches and attempts a fast-forward. Pass `--force-update` to fetch now, even during the throttle interval. For work that needs current code, use `--status` and check `update` and `fast_forward` before relying on the checkout; report a failed fetch or skipped fast-forward. If a refresh fails (offline), the cached copy remains available, possibly stale.
 
 Don't edit inside the shared cache. Copy files out or create a worktree for task-specific changes.
