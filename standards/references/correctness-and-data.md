@@ -8,7 +8,8 @@ Treat database rows, cache entries, events, workflow state, and other serialized
 
 ## Valid state representation
 
-- Make illegal states unrepresentable where practical.
+- Make illegal states unrepresentable where practical. Represent mutually exclusive states as explicit variants and legal transitions rather than flags that can contradict each other.
+- Derive values from their authoritative state instead of storing copies that must remain synchronized. Keep redundant state when a current requirement justifies it, with explicit ownership and consistency guarantees.
 - Give identifiers, units, and constrained values distinct domain representations when they carry invariants or meaningful mix-up risk.
 - Construct constrained values through parsers or constructors that establish their invariants.
 - Resolve optionality before calling behavior that requires a value. Keep optionality when it is part of the domain.

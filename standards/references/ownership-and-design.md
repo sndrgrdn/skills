@@ -52,6 +52,14 @@ Apply the deletion test. An abstraction earns its place when removing it would s
 
 Keep a concrete dependency private until a separate abstraction hides meaningful mechanics, serves multiple owners, or supports real implementation variation. Avoid wrappers that only rename and forward another operation.
 
+## Reader load and simplification
+
+Judge complexity by the layers a reader must trace and the hidden or mutable state they must hold to understand behavior. Evaluate the whole operation, including its callers; fewer lines or smaller functions do not necessarily reduce that burden.
+
+Prefer direct code when a layer merely forwards the same concepts. Keep a boundary when it hides meaningful policy, mechanics, or invariants. An abstraction with one caller or implementation can still earn its place.
+
+When branches, modes, or layers accumulate, consider whether a better representation or interface can remove the complexity rather than redistribute it. Compare alternatives against the whole current purpose: preserve required behavior, invariants, compatibility, and relevant runtime and operational costs. Prefer the simpler equivalent design; keep necessary complexity when the alternative cannot account for it.
+
 ## End-to-end implementation
 
 When a change crosses system boundaries or depends on an unproven architectural path, begin with a tracer bullet: the smallest end-to-end implementation through the real boundaries that produces an observable result and can evolve into the final implementation. Use it to test architectural assumptions before expanding the implementation.

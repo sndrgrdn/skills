@@ -14,6 +14,8 @@ Every acquired resource has a lifecycle owner and a matching release strategy, e
 
 Keep runtime-bound handles inside their valid request, transaction, thread, process, component, or invocation scope. A stable resource identity or cache key does not extend a live handle's validity.
 
+Every asynchronous task has an owner for completion, failure, and cancellation. Keep child work within that owner's lifetime; work that intentionally outlives its initiating scope requires an explicit supervisor or durable owner. Define whether sibling work stops or continues when one task fails.
+
 Keep planning and construction separate from runtime execution. Acquire contextual resources only in the phase that owns them. Ensure required runtime resources are ready before exposing handlers that depend on them.
 
 ## Ambient state and effects
