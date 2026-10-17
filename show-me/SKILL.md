@@ -1,9 +1,11 @@
 ---
 name: show-me
-description: Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts.
+description: Explain structure, behavior, or change visually. Use when a diagram or code-shape sketch makes an explanation easier to understand than prose, or when the user requests a visual artifact.
 ---
 
 Help the user understand the current topic of conversation visually. Skip the preamble and keep prose brief. Pick the smallest view that makes the key point clear.
+
+Default to inline visuals supported by the destination. Match the requested delivery format; create standalone HTML when the user requests a standalone or interactive artifact.
 
 - Show logic or an algorithm as pseudocode:
 
@@ -114,7 +116,7 @@ function expandSkill(command: string): string {
 }
 ```
 
-- For a visual UI, layout, state comparison, or concept too dense for Mermaid, write one focused HTML file — a diagram, an infographic, or a short slide deck, whichever fits the point. Match the product's colors, type, spacing, and components; use real labels and data; support desktop and mobile. Then open it for the user:
+- For a requested standalone or interactive artifact, write one focused HTML file: a diagram, an infographic, or a short slide deck, whichever fits the point. Match the product's colors, type, spacing, and components; use real labels and data; support desktop and mobile. Then open it for the user:
 
 ```
 Bash(open path/to/show-me-{description}.html)
@@ -125,3 +127,5 @@ Bash(open path/to/show-me-{description}.html)
 Place each visual next to the short text it supports. Keep only the calls, files, props, states, and boundaries needed to answer the user's current question or the options to resolve the current discussion point.
 
 You may use one of these, you may use several, it is unlikely you will use all of them. Use your judgement and don't overwhelm the user.
+
+The visual is ready when it answers the reader's question with less reconstruction than prose, preserves consequential ordering and boundaries, and omits detail that does not help.
