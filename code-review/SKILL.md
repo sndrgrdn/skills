@@ -21,7 +21,7 @@ Review thoroughly within the requested scope. Find defects and simpler designs t
 
 The engineering rules live in the shared standards references. Activate a principle when the reviewed work touches its subject:
 
-- **Ownership and simplicity:** [ownership and design](../standards/references/ownership-and-design.md) for modules, dependencies, interfaces, abstractions, branching complexity, or responsibility changes. Assess reader load, information hiding, current need, and simpler equivalent designs.
+- **Ownership and simplicity:** [ownership and design](../standards/references/ownership-and-design.md) for modules, dependencies, interfaces, abstractions, branching complexity, or responsibility changes. Distinguish domain behavior, application policy, technology mechanics, and composition; inspect existing owners and callers to assess where changed responsibilities belong. Substantiate misplaced knowledge or duplicated policy through a concrete consequence, not a preferred layer name. Assess reader load, information hiding, current need, and simpler equivalent designs.
 - **Meaningful representations:** [correctness and data](../standards/references/correctness-and-data.md) for input parsing, schemas, state, optionality, contracts, or unchecked operations.
 - **Explicit failures:** [failures](../standards/references/failures.md) for changed failure modes, recovery, absence, or dependency-error translation.
 - **Owned lifetimes:** [configuration and resources](../standards/references/configuration-and-resources.md) for configuration, startup, resources, asynchronous tasks, time, randomness, or ambient state.
@@ -29,6 +29,7 @@ The engineering rules live in the shared standards references. Activate a princi
 - **Safe boundaries:** [security and observability](../standards/references/security-and-observability.md) for sensitive data, authentication, authorization, or diagnostics.
 - **Behavioral evidence:** [testing](../standards/references/testing.md) for changed behavior, tests, or public type inference. Examine whether the tests would detect the relevant regression, not merely whether they pass.
 - **Clear public surfaces:** [code structure and tooling](../standards/references/code-structure-and-tooling.md) for names, operation inputs, exports, file organization, comments, dependency APIs, or tooling claims.
+- **Execution evidence:** [execution and verification](../standards/references/execution-and-verification.md) for defect corrections, refactoring, migrations, concurrent writes, or measured improvement claims. Assess root-cause correction, behavioral equivalence, caller migration, shared-write ownership, and measurement validity as applicable. Judge the resulting code and supporting evidence; do not require the author's implementation sequence, TDD, prototypes, delegation, or work cadence.
 
 A pattern is an investigation signal, not a verdict. Establish what is wrong here before prescribing a different structure. Omit preference-only findings and checks already covered by verified active tooling.
 
