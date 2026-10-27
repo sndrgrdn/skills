@@ -87,9 +87,9 @@ After a first draft:
 1. For professional writing, could a generic SaaS candidate have written this?
 2. Is there a sentence that exists only to transition?
 3. Is there an adjective doing work a noun could do better?
-4. Am I answering the question asked, or an easier adjacent one?
+4. Am I answering an easier adjacent question instead of the one asked?
 5. Am I manufacturing admiration for something that's just fine?
-6. Does this sound like the approved edited prose, or is it too polished?
+6. Is this more polished than the approved edited prose?
 7. Is this trying to overachieve? If it belongs on a LinkedIn post, cut it.
 
 If yes to any applicable check, cut or rewrite.

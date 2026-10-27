@@ -17,7 +17,7 @@ If the redacted output is not enough to diagnose the bug, say so and ask the use
 
 ## Phase 1: Build a feedback loop
 
-**This is the skill.** Everything else is mechanical. If you have a **tight** pass/fail signal for the bug (one that goes red on _this_ bug), you will find the cause; bisection, hypothesis-testing, and instrumentation all just consume it. If you don't have one, no amount of staring at code will save you.
+Prioritise a **tight** pass/fail signal for the bug: one that goes red on _this_ bug. Bisection, hypothesis-testing, and instrumentation consume that signal. Read source and form provisional hypotheses when needed to construct the loop; test them against observed evidence before treating them as explanations.
 
 Spend disproportionate effort here. **Be aggressive. Be creative. Refuse to give up.**
 
@@ -44,30 +44,29 @@ Treat the loop as a product. Once you have _a_ loop, **tighten** it:
 - Can I make the signal sharper? (Assert on the specific symptom, not "didn't crash".)
 - Can I make it more deterministic? (Pin time, seed RNG, isolate filesystem, freeze network.)
 
-A 30-second flaky loop is barely better than no loop; a 2-second deterministic one is tight, a debugging superpower.
+Prefer a fast, deterministic loop. Keep a slower or probabilistic loop when it is the closest trustworthy signal; record its runtime and limitations, then tighten it where practical.
 
 ### Non-deterministic bugs
 
-The goal is not a clean repro but a **higher reproduction rate**. Loop the trigger 100×, parallelise, add stress, narrow timing windows, inject sleeps. A 50%-flake bug is debuggable; 1% is not, so keep raising the rate until it's debuggable.
+The goal is a **higher reproduction rate**. Repeat the trigger, parallelise, add stress, narrow timing windows, or inject sleeps where safe. Record failures, attempts, and conditions; a run without a failure does not establish that a rare bug is fixed.
 
 ### When you genuinely cannot build a loop
 
-Stop and say so explicitly. List what you tried. Ask the user for: (a) access to whatever environment reproduces it, (b) a redacted captured artifact (HAR file, log dump, core dump, screen recording with timestamps), or (c) permission to add temporary production instrumentation. Do **not** proceed to hypothesise without a loop.
+State the blocker and what you tried. Use available source, logs, traces, or captured artifacts to investigate bounded, falsifiable hypotheses. Ask for missing access, redacted artifacts, or permission for temporary production instrumentation when needed; continue independent, in-scope investigation while blocked.
 
-### Completion criterion: a tight loop that goes red
+### Completion criterion: an evidence path
 
-Phase 1 is done when the loop is **tight** and **red-capable**: you can name **one command** (a script path, a test invocation, a curl) that you have **already run at least once** (show the invocation and its output, redacted), and that is:
+Prefer **one command** (a script path, a test invocation, a curl) that you have **already run at least once**. Show its invocation and output, redacted, and establish:
 
 - [ ] **Red-capable**: it drives the actual bug code path and asserts the **user's exact symptom**, so it can go red on this bug and green once fixed. Not "runs without erroring"; it must be able to _catch this specific bug_.
-- [ ] **Deterministic**: same verdict every run (flaky bugs: a pinned, high reproduction rate, per above).
-- [ ] **Fast**: seconds, not minutes.
-- [ ] **Agent-runnable**: you can run it unattended; a human in the loop only via `scripts/hitl-loop.template.sh`.
+- [ ] **Repeatability**: record the verdict across runs, or failures and attempts for non-deterministic bugs.
+- [ ] **Practicality**: record runtime and any human steps; optimise these without losing the signal. Use `scripts/hitl-loop.template.sh` when human interaction is required.
 
-If you catch yourself reading code to build a theory before this command exists, **stop: jumping straight to a hypothesis is the exact failure this skill prevents.** No red-capable command, no Phase 2.
+When a runnable loop is impractical, record the closest trustworthy evidence, the reproduction blocker, and the next check that could distinguish the leading hypotheses. Proceed with that limitation explicit; a provisional hypothesis is not a verified cause.
 
 ## Phase 2: Reproduce + minimise
 
-Run the loop. Watch it go red as the bug appears.
+Run the loop and observe the failure. When reproduction is blocked, inspect the available failure evidence and record which checks below it supports.
 
 Confirm:
 
@@ -81,13 +80,11 @@ Once it's red, shrink the repro to the **smallest scenario that still goes red**
 
 Why bother: a minimal repro shrinks the hypothesis space in Phase 3 (fewer moving parts left to suspect) and becomes the clean regression test in Phase 5.
 
-Done when **every remaining element is load-bearing**: removing any one of them makes the loop go green.
-
-Do not proceed until you have reproduced **and** minimised.
+Stop shrinking when further reduction no longer helps distinguish causes or costs more than it saves. Proceed when the observed failure and relevant conditions are captured, or reproduction limits are explicit and the next investigation has a checkable prediction.
 
 ## Phase 3: Hypothesise
 
-Generate **3–5 ranked hypotheses** before testing any of them. Single-hypothesis generation anchors on the first plausible idea.
+Rank the plausible hypotheses and consider competing explanations before testing. Generate alternatives where the evidence leaves genuine uncertainty; a directly established cause does not need invented competitors.
 
 Each hypothesis must be **falsifiable**: state the prediction it makes.
 
@@ -125,14 +122,16 @@ If a correct seam exists:
 2. Watch it fail.
 3. Apply the fix.
 4. Watch it pass.
-5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario.
+5. Re-run the Phase 1 feedback loop against the original (un-minimised) scenario when available.
+
+When reproduction remains impractical, use the closest trustworthy executable check through the real interface and report the missing before/after or regression evidence. Keep claims about the fix within what those checks establish.
 
 ## Phase 6: Cleanup
 
 Required before declaring done:
 
-- [ ] Original repro no longer reproduces (re-run the Phase 1 loop)
-- [ ] Regression test passes (or absence of seam is documented)
+- [ ] Original repro has been rerun when available; outcomes, attempts for flaky bugs, and remaining reproduction blockers are reported
+- [ ] Regression test passes, or the missing seam or other concrete coverage blocker is documented
 - [ ] All `[DEBUG-...]` instrumentation removed (`grep` the prefix)
 - [ ] Throwaway prototypes deleted (or moved to a clearly-marked debug location)
 - [ ] The hypothesis that turned out correct is stated in the commit / PR message, so the next debugger learns
