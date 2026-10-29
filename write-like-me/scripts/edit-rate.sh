@@ -40,7 +40,7 @@ for f in "$draft" "$final"; do
 done
 
 tokenize() {
-  grep -oP "[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)?|[^\p{L}\p{N}\s]" "$1" || true
+  perl -CSD -ne 'while (/[\p{L}\p{N}]+(?:[\x{27}\x{2019}][\p{L}\p{N}]+)?|[^\p{L}\p{N}\s]/g) { print "$&\n" }' < "$1"
 }
 
 tmp=$(mktemp -d)
@@ -52,15 +52,18 @@ tokenize "$final" > "$tmp/final"
 draft_n=$(wc -l < "$tmp/draft" | tr -d ' ')
 final_n=$(wc -l < "$tmp/final" | tr -d ' ')
 
-diff_out=$(diff --old-line-format='d %L' --new-line-format='a %L' --unchanged-line-format='' "$tmp/draft" "$tmp/final" || true)
-
-if [[ -z "$diff_out" ]]; then
-  inserted=0
-  deleted=0
+if diff "$tmp/draft" "$tmp/final" > "$tmp/diff"; then
+  :
 else
-  inserted=$(printf '%s\n' "$diff_out" | grep -c '^a ' || true)
-  deleted=$(printf '%s\n' "$diff_out" | grep -c '^d ' || true)
+  status=$?
+  if [[ "$status" -ne 1 ]]; then
+    exit "$status"
+  fi
 fi
+
+diff_out=$(awk '/^< / { print "d " substr($0, 3) } /^> / { print "a " substr($0, 3) }' "$tmp/diff")
+inserted=$(awk '/^> / { n++ } END { print n+0 }' "$tmp/diff")
+deleted=$(awk '/^< / { n++ } END { print n+0 }' "$tmp/diff")
 
 denom=$((draft_n + final_n))
 if [[ "$denom" -eq 0 ]]; then
