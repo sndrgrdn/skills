@@ -31,7 +31,7 @@ Use this template. Omit `Review notes` when there is nothing consequential to fl
 [Consequential trade-offs, compatibility or rollout concerns, and remaining uncertainty that needs reviewer attention.]
 ```
 
-When a small visual explains the change faster than prose, use the `show-me` skill to produce the smallest GitHub-renderable view. An explanatory visual shows the mechanism; execution evidence demonstrates the outcome. For visual changes, prefer comparable screenshots or a short recording.
+When a small visual explains the change faster than prose, read and follow [`show-me`](../show-me/SKILL.md) to produce the smallest GitHub-renderable view. An explanatory visual shows the mechanism; execution evidence demonstrates the outcome. For visual changes, prefer comparable screenshots or a short recording.
 
 Scale the content to the change. For a small PR, one summary sentence and one evidence bullet can be enough. Use the repository's domain language and include only information the reviewer needs beyond the diff and CI.
 
