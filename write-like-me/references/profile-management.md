@@ -19,7 +19,7 @@ First distinguish a persistent voice correction from an edit to the current draf
 - A clear statement about the user's voice everywhere updates `core.md`. State that it affects every venue.
 - A request about only the current wording edits the draft and leaves the profile untouched.
 - An ambiguous correction requires one question: should this apply to the current draft, this venue, or every venue?
-- A pattern inferred by the agent requires approval before it becomes a rule.
+- For patterns inferred from edited drafts, follow the Hypothesis policy in [`edit-log.md`](edit-log.md). Other inferred patterns require approval before becoming rules.
 
 Never update a profile silently. Preserve its existing rules and samples unless the named change directly supersedes them.
 

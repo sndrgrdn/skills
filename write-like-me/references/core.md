@@ -91,5 +91,6 @@ After a first draft:
 5. Am I manufacturing admiration for something that's just fine?
 6. Is this more polished than the approved edited prose?
 7. Is this trying to overachieve? If it belongs on a LinkedIn post, cut it.
+8. Does the draft state an opinion, feeling, verdict, or fact the source never gave? The rewrite is the placeholder defined in SKILL.md.
 
 If yes to any applicable check, cut or rewrite.
