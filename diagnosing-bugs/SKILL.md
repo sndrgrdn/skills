@@ -54,7 +54,7 @@ The goal is a **higher reproduction rate**. Repeat the trigger, parallelise, add
 
 State the blocker and what you tried. Use available source, logs, traces, or captured artifacts to investigate bounded, falsifiable hypotheses. Ask for missing access, redacted artifacts, or permission for temporary production instrumentation when needed; continue independent, in-scope investigation while blocked.
 
-### Completion criterion: an evidence path
+### Evidence path
 
 Prefer **one command** (a script path, a test invocation, a curl) that you have **already run at least once**. Show its invocation and output, redacted, and establish:
 

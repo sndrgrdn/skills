@@ -40,6 +40,3 @@ Match retry timing to the failure. Bound attempts or elapsed time, add jitter wh
 
 Preserve request identity, receipts, checkpoints, and recovery intent when they are required to reconcile, retry, or compensate safely. Define the operation's point of no return.
 
-## Completion criterion
-
-Persistence mechanics remain private to a cohesive capability. Representation authority is explicit, independently living data has its own owner, migrations commit only validated state, and transaction scope contains only atomic database work. Every duplicate path, retry, repeated operation, and uncertain remote mutation has an explicit owner and safety policy.

@@ -31,6 +31,3 @@ Classify an HTTP response by status before decoding it as a successful represent
 
 Treat a timeout, interruption, or missing response from a remote mutation as uncertainty, not proof that the mutation failed. Reconcile or retry only from actual evidence about the remote outcome and idempotency guarantee.
 
-## Completion criterion
-
-Every expected failure has an intentional identity and public propagation path. Defects remain distinct. Translation occurs at the boundary that understands the source and target meanings, diagnostics retain safe context, and uncertain remote outcomes are not misclassified as known failures.

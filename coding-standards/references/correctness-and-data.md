@@ -39,6 +39,3 @@ An unchecked operation requires:
 
 Unchecked operations include unchecked casts, untyped values, unchecked deserialization, raw interpolation, skipped validations, and visibility-bypassing reflection or metaprogramming.
 
-## Completion criterion
-
-Every changed value has an identified producer, established invariants, remaining invariants, and owner. Boundary data is parsed into meaningful representations, valid states are explicit, recurring consumer defenses have been checked for an established producer contract, semantically distinct contracts remain separate, and each unchecked operation has concrete evidence and narrow containment.

@@ -43,6 +43,3 @@ Treat a passing check as evidence only for what its configuration and implementa
 
 Keep rule catalogs and numeric thresholds in configuration rather than duplicating them in prose.
 
-## Completion criterion
-
-Names expose actual behavior and ownership, inputs expose caller-selected policy, files remain cohesive and searchable, and public surfaces contain only intentional contracts. Comments add information unavailable from code. Dependency and enforcement claims cite the active version, configuration, and evidence source.

@@ -34,8 +34,6 @@ Complete this procedure when the user shares an edited final of a draft. Use the
    - Hypotheses added, supported, or retired, and any proposed guide or source-fidelity changes.
 6. Report the saved pair and log entry. Present proposed guide changes with their exact wording and await approval before applying them.
 
-Complete when the pair is saved, every edit is classified or marked unresolved, the rate or failure is recorded, the log is appended, hypotheses are updated, and proposed guide changes are presented but unapplied.
-
 ## Log
 
 No entries yet.

@@ -2,7 +2,7 @@
 
 ## Test through real interfaces
 
-Every caller-visible feature has an end-to-end happy-path test through its real public entrypoint when the normal test environment can run it reliably.
+Every caller-visible feature has an end-to-end success-path test through its real public entrypoint when the normal test environment can run it reliably.
 
 Add end-to-end coverage for expected error paths that the public entrypoint can exercise reliably. Cover remaining important failures at the closest real interface. Report why end-to-end coverage is impractical when unreliable third parties or unreasonable setup, runtime, or cost prevent it.
 
@@ -72,6 +72,3 @@ Keep production branches, exports, flags, and behavior determined by production 
 
 When static type inference is public behavior, add compile-time tests using ordinary call sites without rescue annotations or casts. For parser or service API changes, assert the complete function contract: input, arity or options, success, expected failures, and required capabilities where applicable. Include rejected calls as well as inferred results; parameter-only assertions can miss a failure or requirement widened by extraction.
 
-## Completion criterion
-
-Every changed caller-visible behavior has an end-to-end happy path or a reported concrete blocker; each expected error path is covered at the highest reliable real interface or has a reported concrete blocker; every changed property named above has been assessed and applicable property tests are present; changed public inference has complete signature and accepted/rejected-call tests; tests cross real interfaces without module mocks; valid generated domain data preserves production invariants while invalid boundary fixtures independently challenge them; changed parsing/recovery behavior satisfies the regression guidance above; production surfaces remain determined by production needs; and every reusable test implementation truthfully matches its name and complete observable contract.

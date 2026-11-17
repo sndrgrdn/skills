@@ -76,6 +76,3 @@ Refactor by assigning a calculation, policy, translation, persistence operation,
 
 Give extracted behavior explicit inputs and outputs. Methods that communicate through shared mutable instance state redistribute complexity rather than reduce it. Evaluate reasoning burden at both definition and call sites. Report a remaining metric conflict instead of mechanically partitioning cohesive behavior.
 
-## Completion criterion
-
-Every changed responsibility and dependency has one owner. Modules provide useful depth, application policy and effect order remain visible, and public interfaces expose caller-relevant concepts. Each interface implementation preserves its interface's full behavioral contract. For each corrected defect, the enabling condition is removed at its owner where practical, or the remaining recurrence path is explicit. Each new mechanism extends an established repository mechanism when one fits or has a current need that justifies its separate cost, and each abstraction passes YAGNI and the deletion test. Each unproven cross-boundary path has an observable tracer bullet before expansion, each vertical slice completes caller-visible behavior, and refactoring reduces reasoning burden across both definitions and callers.

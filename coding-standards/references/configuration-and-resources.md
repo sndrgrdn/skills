@@ -26,6 +26,3 @@ Confine mutable global state to an explicit framework or runtime boundary with a
 
 Treat time, randomness, and identity generation as explicit dependencies when they affect behavior. Pure calculations receive concrete timestamps and generated values.
 
-## Completion criterion
-
-Every configuration value is parsed once at an owning boundary, malformed values fail, and precedence is explicit. Every acquired resource has a valid scope and release strategy. Runtime work occurs in its owning phase, module loading is inert, and ambient mutable state remains contained.
