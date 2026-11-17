@@ -1,0 +1,5 @@
+interface:
+  display_name: "Implement"
+  short_description: "Ordered path from goal to verified code"
+policy:
+  allow_implicit_invocation: false
