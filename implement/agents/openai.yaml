@@ -1,5 +1,5 @@
 interface:
   display_name: "Implement"
-  short_description: "Ordered path from goal to verified code"
+  short_description: "Build and verify agreed work"
 policy:
   allow_implicit_invocation: false
