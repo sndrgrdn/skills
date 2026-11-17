@@ -11,7 +11,7 @@ Review thoroughly within the requested scope. Find defects and simpler designs t
 
 2. **Understand the change.** Read every changed part in scope and the surrounding callers, implementations, and tests needed to understand it. Trace caller-visible behavior, guarantees, state transitions, failures, and effects. Verify material premises rather than treating the author's explanation as proof.
 
-3. **Apply relevant principles.** Call the skill coding-standards and load every applicable contract from its step 3 index. Apply those engineering rules to the reviewed work; do not run its implementation working loop. Documented repository requirements override these defaults. Investigate both broken behavior and unnecessary complexity; preserve justified boundaries and real case distinctions. A pattern is an investigation signal, not a verdict: establish what is wrong here before prescribing a different structure. For tests, ask whether they would catch the relevant regression, not merely whether they pass. Judge resulting code and evidence; do not require the author's implementation sequence, TDD, prototypes, delegation, or work cadence. Omit preference-only findings and checks already covered by verified active tooling.
+3. **Apply relevant principles.** Call the Skill tool with "coding-standards" and load every applicable contract. Apply those engineering rules to the reviewed work; do not run an implementation pass. Documented repository requirements override these defaults. Investigate both broken behavior and unnecessary complexity; preserve justified boundaries and real case distinctions. A pattern is an investigation signal, not a verdict: establish what is wrong here before prescribing a different structure. For tests, ask whether they would catch the relevant regression, not merely whether they pass. Judge resulting code and evidence; do not require the author's implementation sequence, TDD, prototypes, delegation, or work cadence. Omit preference-only findings and checks already covered by verified active tooling.
 
 4. **Substantiate findings.** Trace each concern to a reachable failure, a concrete maintenance burden, or a violated applicable requirement. Look for counterevidence in contracts, callers, constraints, and existing mechanisms. For a simplification, show what becomes easier and account for the behavior, invariants, compatibility, and costs it must preserve. Run relevant existing checks or a focused, non-mutating reproduction when useful and safe. State what the evidence establishes and what remains unknown.
 
@@ -27,6 +27,5 @@ For each finding, give:
 
 Distinguish required corrections from non-blocking improvements. No finding quota applies.
 
-## Completion criterion
-
 Every changed part in scope has been inspected, relevant principles applied, and candidate findings supported or discarded. Report blocked investigations explicitly; do not present incomplete coverage as a clean review.
+
