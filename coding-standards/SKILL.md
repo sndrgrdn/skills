@@ -1,5 +1,5 @@
 ---
-name: standards
+name: coding-standards
 description: Design and change code with clear ownership, meaningful data models, and verified behavior. Use for implementation, bug fixes, refactoring, architecture, integrations, persistence, configuration, resources, failures, security, observability, operational workflows, and tests.
 ---
 
