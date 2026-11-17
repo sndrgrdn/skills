@@ -28,6 +28,8 @@ Close database transactions before network calls or long-running work. Record du
 
 Define an idempotency strategy for every real duplicate-execution path. Put the strategy at the layer that owns duplication. Valid strategies include stable request keys, natural uniqueness constraints, deduplication records, guarded state transitions, transactional outboxes, and transactional inboxes.
 
+Prefer strategies that read current state, apply only the remaining difference toward the goal, and leave any incomplete residue recognizable as stale or replaceable by the next run. Prefer atomic replace of the final artifact when the medium supports it.
+
 Place retry policy at the boundary that understands the failure and can prove repeated execution is safe. Avoid nested retries owned by several layers.
 
 Define each repeated operation's behavior after success, expected failure, defect, interruption, retry exhaustion, and individual item failure. An intentionally permanent worker still has an explicit continuation and termination policy.

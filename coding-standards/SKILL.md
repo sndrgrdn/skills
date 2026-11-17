@@ -59,7 +59,7 @@ Read every applicable reference completely. Existing instructions and safety con
 
 ### 5. Prove it works
 
-**Prove It Works.** Exercise the real public interface and inspect observable outcomes. Verify required failure paths, invariants, effects, and changed public inference using the applicable references. A passing typecheck or another agent's report proves only what it actually checks.
+**Prove It Works.** Exercise the real public interface and inspect observable outcomes. Verify required failure paths, invariants, effects, and changed public inference using the applicable references. When a check fails, confirm the observation method before blaming the system. A passing typecheck or another agent's report proves only what it actually checks.
 
 Review the whole diff against the outcome and chosen ownership. Check callers and obsolete references after moves or interface changes. Report what changed, consequential design choices, commands and results, and remaining uncertainty. Distinguish verified behavior from inference and checks not run.
 

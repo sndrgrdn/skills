@@ -34,7 +34,7 @@ Use a failing regression test first when there is a reliable, proportionate path
 
 Before changing structure, establish the observable contract with existing tests, characterization, baseline outputs, or an equivalence check. Preserve required failures, effects, ordering, and compatibility as well as successful outputs. Static checks alone do not establish behavioral equivalence.
 
-**Migrate Callers Then Delete Legacy APIs.** For internal contracts with no independent compatibility obligation, migrate all callers and remove the old surface and obsolete tests in the same coordinated change. Preserve tests for behavior the new interface must still provide. Inspect published or separately deployed consumers before assuming callers can move together.
+**Migrate Callers Then Delete Legacy APIs.** For internal contracts with no independent compatibility obligation, migrate all callers and remove the old surface and obsolete tests in the same coordinated change. Delete tests that only protect the old implementation shape. Preserve tests for behavior the new interface must still provide. Inspect published or separately deployed consumers before assuming callers can move together.
 
 **Outcome-Oriented Execution.** For a planned migration, identify verification boundaries and any deliberately incomplete intermediate state. Keep temporary breakage local, recoverable, and outside deployed or shared baselines. Run relevant checks at each declared boundary and full applicable verification at completion. Prefer safe incremental delivery when deployment or compatibility requires it.
 
@@ -52,7 +52,7 @@ Before changing structure, establish the observable contract with existing tests
 
 ## Explain measured results
 
-**Explain the Number.** Before using a measurement to choose or claim an improvement, state the claim and inspect what the harness measures. Confirm the intended work actually ran, outputs are correct, and errors or skipped work did not produce the result.
+**Explain the Number.** Before measuring, state the decision the number would change and the noise floor that would make the effect untrustworthy. Stop when run-to-run spread exceeds the claimed effect. Before using a measurement to choose or claim an improvement, state the claim and inspect what the harness measures. Confirm the intended work actually ran, outputs are correct, and errors or skipped work did not produce the result.
 
 Compare equivalent workloads and relevant production-like settings. Identify the limiting resource or code path from runtime evidence; inspect the load generator as well as the system. Repeat and interleave comparisons to expose noise and drift. Report units, sample count, spread, relevant settings, and evidence for the limiter. Check physical plausibility and end-to-end relevance before extrapolating a microbenchmark.
 
@@ -62,6 +62,6 @@ An explicitly requested ballpark may use a single run labeled as such, but still
 
 ## Make recurring lessons enforceable
 
-**Encode Lessons in Structure.** When a demonstrated mistake recurs, look first for an owning representation, interface, constraint, or existing enforcement path that prevents it. Add a focused regression when prevention is impractical. Change instructions only when the lesson requires judgment that the system cannot enforce. Keep the mechanism proportional to demonstrated recurrence and verify that it rejects the mistake without rejecting required behavior.
+**Encode Lessons in Structure.** When a demonstrated mistake recurs, look first for an owning representation, interface, constraint, or existing enforcement path that prevents it. Add a focused regression when prevention is impractical. Change instructions only when the lesson requires judgment that the system cannot enforce. Keep the mechanism proportional to demonstrated recurrence and verify that it rejects the mistake without rejecting required behavior. When a structural check prevents the mistake, remove the duplicated admonition rather than keeping both.
 
 **Complete when:** the recurrence has an enforceable fix or a specific, justified judgment rule, rather than another duplicated admonition.

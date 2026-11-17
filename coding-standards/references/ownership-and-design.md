@@ -58,7 +58,7 @@ Judge complexity by the layers a reader must trace and the hidden or mutable sta
 
 Prefer direct code when a layer merely forwards the same concepts. Keep a boundary when it hides meaningful policy, mechanics, or invariants. An abstraction with one caller or implementation can still earn its place.
 
-When branches, modes, or layers accumulate, consider whether a better representation or interface can remove the complexity rather than redistribute it. Compare alternatives against the whole current purpose: preserve required behavior, invariants, compatibility, and relevant runtime and operational costs. Prefer the simpler equivalent design; keep necessary complexity when the alternative cannot account for it.
+When branches, modes, or layers accumulate, prefer a representation that removes the complexity: a state machine, discriminated union, registry, table, or reducer when the same shape assumption or synchronized flags spread across conditionals or files. Keep local, stable branching as ordinary code. Compare alternatives against the whole current purpose: preserve required behavior, invariants, compatibility, and relevant runtime and operational costs. Prefer the simpler equivalent design; keep necessary complexity when the alternative cannot account for it.
 
 ## End-to-end implementation
 

@@ -30,6 +30,8 @@ Assert observable outcomes:
 
 A spy assertion is appropriate only when the interaction is itself the observable behavior. Prefer a recording implementation and inspect its public records over spying on implementation methods.
 
+Judge a test by two edits: break an observable result and the test must fail; change only internals and keep every observable result and the test must still pass. Rewrite or remove tests that survive the first edit or fail the second.
+
 ## Property tests and arbitraries
 
 Assess property-based testing for every changed invariant, transition, normalization, equivalence, ordering, idempotence, or roundtrip. Add property tests when generated inputs cover meaningful cases beyond a short example list. Apply this assessment especially to parsers, smart constructors, branded/refined types, state machines, serialization, and lawful combinators.
