@@ -1,0 +1,108 @@
+#!/usr/bin/env ruby
+require "yaml"
+
+root = Dir.pwd
+dir = "docs/rfcs"
+index_path = "#{dir}/INDEX.md"
+write = ARGV.include?("--write")
+
+abort "#{dir}/domains.yml is missing. Create it before the first RFC." unless File.exist?(File.join(root, dir, "domains.yml"))
+domains = YAML.safe_load_file(File.join(root, dir, "domains.yml")).to_h { [it.fetch("block"), it] }
+statuses = %w[draft approved enforced superseded]
+statement_pattern = /\A- \*\*(\d{4})\.(\d+)\*\* (MUST NOT|MUST|SHOULD NOT|SHOULD): /
+
+failures = []
+rfcs = {}
+
+Dir.glob("#{dir}/[0-9]*.md", base: root).sort.each do |path|
+  number = File.basename(path)[/\A(\d{4})-[a-z0-9-]+\.md\z/, 1]
+  next failures << "#{path}: name it NNNN-slug.md" unless number
+
+  front, body = File.read(File.join(root, path)).match(/\A---\n(.*?)\n---\n(.*)\z/m)&.captures
+  next failures << "#{path}: starts with front matter" unless front
+
+  meta = YAML.safe_load(front)
+  domain = domains[number[0, 2]]
+  failures << "#{path}: id is RFC-#{number}" unless meta["id"] == "RFC-#{number}"
+  failures << "#{path}: block #{number[0, 2]} is not in #{dir}/domains.yml" unless domain
+  failures << "#{path}: domain is #{domain["domain"].inspect}" if domain && meta["domain"] != domain["domain"]
+  failures << "#{path}: status is one of #{statuses.join(", ")}" unless statuses.include?(meta["status"])
+  failures << "#{path}: the heading repeats the title" unless body.lines.find { it.start_with?("# ") }&.chomp == "# #{meta["title"]}"
+
+  headings = body.scan(/^## .+$/)
+  failures << "#{path}: repeats the heading #{headings.find { headings.count(it) > 1 }}" if headings.uniq.size != headings.size
+
+  statements = []
+  body.lines.map(&:chomp).each do |line|
+    if (match = line.match(statement_pattern))
+      statements << {prefix: match[1], id: match[2].to_i, level: match[3], lines: [line]}
+    elsif statements.any? && !statements.last[:closed] && (line.start_with?("  ") || line.empty?)
+      statements.last[:lines] << line
+    elsif statements.any?
+      statements.last[:closed] = true
+    end
+  end
+  statements.each { it[:lines].pop while it[:lines].last&.empty? }
+
+  failures << "#{path}: has statements under ## Statements" if statements.empty? && meta["status"] != "superseded"
+  failures << "#{path}: is enforced but has no MUST or MUST NOT statement, so nothing in it can block" if meta["status"] == "enforced" && statements.none? { it[:level].start_with?("MUST") }
+  statements.each { failures << "#{path}: statement #{it[:prefix]}.#{it[:id]} belongs to RFC-#{it[:prefix]}" unless it[:prefix] == number }
+  ids = statements.map { it[:id] }
+  failures << "#{path}: statement numbers repeat" unless ids.uniq.size == ids.size
+
+  rfcs[number] = {meta:, statements:, path:}
+end
+
+rfcs.each_value do |rfc|
+  next unless rfc[:meta]["status"] == "superseded"
+
+  successor = rfc[:meta]["superseded_by"].to_s[/\ARFC-(\d{4})\z/, 1]
+  failures << "#{rfc[:path]}: superseded_by names an existing RFC" unless rfcs.key?(successor)
+end
+
+index = +"# RFC index\n\n"
+index << "`bin/rfcs --write` generates this file from the RFCs in `#{dir}/`. Edit the RFCs, then rerun it. "
+index << "Scan it for the statements that bind your change, and open an RFC for its reasoning.\n\n"
+index << "| Block | Domain | Covers |\n| --- | --- | --- |\n"
+domains.each_value { index << "| #{it["block"]} | #{it["domain"]} | #{it["covers"]} |\n" }
+domains.each_value do |domain|
+  members = rfcs.select { |number, _| number.start_with?(domain["block"]) }
+  next if members.empty?
+
+  index << "\n## #{domain["domain"]}\n"
+  members.each do |number, rfc|
+    index << "\n### [RFC-#{number}](#{File.basename(rfc[:path])}): #{rfc[:meta]["title"]}\n\n"
+    index << "Status: #{rfc[:meta]["status"]}"
+    index << ", superseded by #{rfc[:meta]["superseded_by"]}" if rfc[:meta]["superseded_by"]
+    index << "\n\n"
+    rfc[:statements].each { index << it[:lines].join("\n") << "\n" }
+  end
+end
+
+index_file = File.join(root, index_path)
+if write
+  File.write(index_file, index)
+elsif !File.exist?(index_file) || File.read(index_file) != index
+  failures << "#{index_path} is out of date. Run bin/rfcs --write"
+end
+
+docs = `git -C #{root} ls-files --cached --others --exclude-standard -- '*.md'`.split("\n")
+docs.sort.each do |path|
+  next unless File.exist?(File.join(root, path))
+
+  File.foreach(File.join(root, path)).with_index(1) do |line, number|
+    failures << "#{path}:#{number}: cites an ADR. Cite the RFC that replaced it" if line.gsub(/`[^`]*`/, "").match?(/\bADR-\d/) && !line.start_with?("formerly:")
+    line.scan(/RFC-(\d{4})(?:\.(\d+))?/) do |rfc, statement|
+      if !rfcs.key?(rfc)
+        failures << "#{path}:#{number}: RFC-#{rfc} does not exist"
+      elsif statement && rfcs[rfc][:statements].none? { it[:id] == statement.to_i }
+        failures << "#{path}:#{number}: RFC-#{rfc}.#{statement} does not exist"
+      end
+    end
+  end
+end
+
+if failures.any?
+  puts failures
+  exit 1
+end
